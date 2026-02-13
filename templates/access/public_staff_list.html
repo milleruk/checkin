@@ -2,324 +2,677 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>On-site Staff — {{ site.name }}</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Fire Register — {{ site.name }}</title>
+
   <style>
-    :root {
-      --bg: #f8f9fa;
-      --card: #ffffff;
-      --text: #1f2937;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --shadow: 0 6px 18px rgba(0,0,0,0.06);
-      --radius: 16px;
+    :root{
+      --bg0:#f5f7fb;
+      --text:#0f172a;
+      --muted:#64748b;
+      --border:rgba(2,6,23,.10);
+      --shadow: 0 10px 30px rgba(2,6,23,.08);
+      --shadow2: 0 2px 10px rgba(2,6,23,.06);
+
+      --radius:18px;
+      --radiusSm:14px;
+
+      --brand:#4e73df;
+      --info:#36b9cc;
+      --warn:#f6c23e;
+      --danger:#e74a3b;
+      --success:#1cc88a;
+
+      --headerBg: rgba(255,255,255,.82);
     }
 
-    * { box-sizing: border-box; }
+    *{ box-sizing:border-box; }
+    html, body{ height:100%; }
 
-    body {
+    body{
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      margin: 0;
-      padding: 24px;
-      background: var(--bg);
-      color: var(--text);
+      margin:0;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 700px at 10% -10%, rgba(78,115,223,.14), transparent 55%),
+        radial-gradient(900px 600px at 90% 0%, rgba(54,185,204,.10), transparent 50%),
+        linear-gradient(180deg, var(--bg0), #eef2ff 45%, var(--bg0));
+      padding: 18px 12px 28px;
     }
 
-    .wrap {
-      max-width: 820px;
-      margin: 0 auto;
-    }
+    .wrap{ max-width: 1120px; margin: 0 auto; }
 
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
+    /* HERO */
+    .pageHero{
+      background: var(--headerBg);
+      border:1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding: 22px;
-    }
-
-    .topbar {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      overflow:hidden;
       margin-bottom: 14px;
     }
 
-    h1 {
-      margin: 0;
-      font-size: 1.55rem;
-      letter-spacing: -0.02em;
+    .heroRow{
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(2,6,23,.06);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
     }
 
-    .sub {
-      margin: 6px 0 0;
+    .heroLeft{ display:flex; gap:12px; align-items:flex-start; min-width:0; flex:1 1 auto; }
+
+    .logo{
+      width:48px;height:48px;
+      border-radius:16px;
+      background:
+        radial-gradient(18px 18px at 30% 30%, rgba(255,255,255,.75), transparent 60%),
+        linear-gradient(135deg, var(--danger), var(--brand));
+      box-shadow: var(--shadow2);
+      border: 1px solid rgba(255,255,255,.45);
+      flex:0 0 auto;
+    }
+
+    h1{
+      margin:0;
+      font-size: 1.25rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      color:#1f2937;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .sub{
+      margin: 4px 0 0;
       color: var(--muted);
-      font-size: 0.95rem;
+      font-size: .92rem;
       line-height: 1.35;
     }
 
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
+    .kpis{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:flex-end;
+      align-items:flex-start;
+      flex:0 0 auto;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
       border: 1px solid var(--border);
-      background: #f3f4f6;
-      color: #374151;
+      background: rgba(248,249,252,.9);
+      color:#1f2937;
       border-radius: 999px;
       padding: 8px 12px;
-      font-size: 0.9rem;
+      font-size: .9rem;
       white-space: nowrap;
+      box-shadow: var(--shadow2);
+      line-height: 1;
     }
-
-    .count {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+    .count{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
       min-width: 32px;
       height: 24px;
       padding: 0 10px;
       border-radius: 999px;
       background: #111827;
-      color: #fff;
-      font-weight: 700;
-      font-size: 0.85rem;
+      color:#fff;
+      font-weight: 900;
+      font-size: .85rem;
+      flex:0 0 auto;
     }
+    .count.danger{ background: var(--danger); }
+    .count.brand{ background: var(--brand); }
+    .count.info{ background: var(--info); }
+    .count.warn{ background: #b45309; }
 
-    .notice {
-      border: 1px solid var(--border);
-      border-left: 6px solid #ef4444;
-      background: #fff7f7;
-      border-radius: 12px;
+    .notice{
+      margin: 14px 18px 16px;
+      border-radius: var(--radiusSm);
+      border: 1px solid rgba(231,74,59,.25);
+      background: rgba(254,242,242,.70);
       padding: 12px 14px;
-      margin: 14px 0 18px;
-    }
-
-    .notice strong { display: block; margin-bottom: 4px; }
-    .notice p { margin: 0; color: #4b5563; font-size: 0.95rem; }
-
-    .list-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin: 0 0 10px;
-      gap: 12px;
-    }
-
-    .list-head h2 {
-      margin: 0;
-      font-size: 1.05rem;
-      color: #111827;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px 22px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    .item {
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display:flex;
       gap: 10px;
-      background: #ffffff;
+      align-items:flex-start;
     }
+    .notice .ico{ font-size: 18px; line-height:1; margin-top:1px; }
+    .notice strong{ display:block; margin-bottom:2px; }
+    .notice p{ margin:0; color:#7f1d1d; font-size:.92rem; }
 
-    .name {
-      font-weight: 600;
-      color: #111827;
-    }
-
-    .muted {
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-
-    .empty {
-      border: 1px dashed var(--border);
-      border-radius: 12px;
-      padding: 14px;
-      color: var(--muted);
-      background: #fafafa;
-    }
-
-    .footer {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
+    .heroFooter{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
       gap: 10px;
-      margin-top: 18px;
       color: var(--muted);
-      font-size: 0.9rem;
+      font-size: .9rem;
+      padding: 10px 18px 16px;
     }
-
-    .updated {
-      display: inline-flex;
-      align-items: center;
+    .updated{
+      display:inline-flex;
+      align-items:center;
       gap: 8px;
       border-radius: 999px;
       padding: 8px 12px;
       border: 1px solid var(--border);
-      background: #f9fafb;
+      background: rgba(248,249,252,.9);
+      box-shadow: var(--shadow2);
     }
-
-    .dot {
-      width: 8px;
-      height: 8px;
+    .dot{
+      width: 8px; height: 8px;
       border-radius: 50%;
-      background: #22c55e;
-      display: inline-block;
+      background: var(--success);
+      display:inline-block;
     }
 
-    /* Mobile */
-    @media (max-width: 680px) {
-      body { padding: 12px; }
-      .card { padding: 14px; border-radius: 12px; }
-      h1 { font-size: 1.2rem; }
-      .grid { grid-template-columns: 1fr; }
-      .pill { font-size: 0.85rem; }
+    /* MAIN GRID */
+    .grid2{
+      display:grid;
+      grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+      gap: 14px;
+      align-items: start;
     }
 
-    /* Print */
-    @media print {
-      body { background: #fff; padding: 0; }
-      .card { box-shadow: none; border-radius: 0; border: 0; padding: 0; }
-      .notice { border-left-color: #000; background: #fff; }
-      .pill, .updated { border: 1px solid #000; background: #fff; }
-      .count { background: #000; }
-      .item { border: 1px solid #000; }
+    .card{
+      background: var(--headerBg);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      overflow:hidden;
+      min-width: 0;
+    }
+    .cardHead{
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(2,6,23,.06);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 12px;
+    }
+    .cardTitle{
+      margin:0;
+      font-size: 1.05rem;
+      font-weight: 900;
+      color:#1f2937;
+    }
+    .cardSub{
+      margin: 4px 0 0;
+      font-size: .88rem;
+      color: var(--muted);
+    }
+    .cardBody{ padding: 14px 16px 16px; min-width:0; }
+
+    .list-head{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+      margin: 0 0 10px;
+    }
+    .meta{
+      color: var(--muted);
+      font-size: .88rem;
+      white-space:nowrap;
     }
 
-    .compact-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.92rem;
-      background: #fff;
+    /* Names chips */
+    .names{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin: 0 0 12px;
+      padding: 0;
+      list-style:none;
     }
-    .compact-table th, .compact-table td {
-      padding: 4px 8px;
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 10px 12px;
+      border-radius: 999px;
       border: 1px solid var(--border);
-      text-align: left;
-      font-weight: 400;
+      background: rgba(255,255,255,.88);
+      box-shadow: var(--shadow2);
+      font-weight: 900;
+      color:#111827;
+      max-width: 100%;
     }
-    .compact-table th {
-      background: #f3f4f6;
-      font-weight: 600;
-      color: #374151;
+    .chipText{
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      max-width: 48ch;
     }
-    .compact-table tr:nth-child(even) { background: #fafafa; }
-    .compact-table .seen-cell { width: 60px; text-align: center; }
+    .chip .mini{
+      font-weight: 900;
+      font-size: .78rem;
+      background: rgba(78,115,223,.12);
+      border: 1px solid rgba(78,115,223,.20);
+      padding: 3px 8px;
+      border-radius: 999px;
+      white-space:nowrap;
+      flex:0 0 auto;
+    }
+    .chip .left{
+      font-weight: 900;
+      font-size: .78rem;
+      color: #7c2d12;
+      background: rgba(246,194,62,.25);
+      border: 1px solid rgba(246,194,62,.35);
+      padding: 3px 8px;
+      border-radius: 999px;
+      white-space:nowrap;
+      flex:0 0 auto;
+    }
+
+    .empty{
+      border: 1px dashed rgba(2,6,23,.20);
+      border-radius: var(--radiusSm);
+      padding: 14px;
+      color: var(--muted);
+      background: rgba(248,250,252,.85);
+    }
+
+    /* Table desktop */
+    .tableWrap{
+      border: 1px solid var(--border);
+      border-radius: var(--radiusSm);
+      background: rgba(255,255,255,.92);
+      box-shadow: var(--shadow2);
+      overflow:hidden; /* no scroll */
+    }
+    table{
+      width:100%;
+      border-collapse: collapse;
+      font-size: .92rem;
+    }
+    th, td{
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(2,6,23,.06);
+      text-align:left;
+      vertical-align: middle;
+      color:#1f2937;
+      white-space: nowrap;
+    }
+    th{
+      background: rgba(248,249,252,.95);
+      font-weight: 900;
+      color:#111827;
+      border-bottom: 1px solid rgba(2,6,23,.10);
+    }
+    tr:nth-child(even) td{ background: rgba(248,250,252,.55); }
+
+    td.timeCell{ white-space: normal; }
+
+    /* Seen column alignment */
+    .seen-cell{
+      width: 84px;
+      text-align:center;
+    }
+    .seen-cell input[type="checkbox"]{
+      width: 18px;
+      height: 18px;
+      display: inline-block;
+      vertical-align: middle;
+      accent-color: var(--brand);
+      cursor: pointer;
+    }
+
+    /* Type tags */
+    .typeTag{
+      display:inline-flex;
+      align-items:center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(2,6,23,.10);
+      background: rgba(255,255,255,.85);
+      font-weight: 900;
+      font-size: .82rem;
+      color:#111827;
+      white-space: nowrap;
+    }
+    .typeTag.assoc{ border-color: rgba(54,185,204,.25); background: rgba(236,254,255,.85); }
+    .typeTag.vis{ border-color: rgba(246,194,62,.30); background: rgba(255,251,235,.85); }
+    .typeTag.cont{ border-color: rgba(133,135,150,.28); background: rgba(248,250,252,.85); }
+
+    /* ✅ Highlight row/card green when Seen is ticked (CSS-only using :has) */
+    @supports selector(tr:has(input:checked)) {
+      /* Desktop table row */
+      tr:has(.seen-cell input[type="checkbox"]:checked) td{
+        background: rgba(28,200,138,.12) !important;
+      }
+      tr:has(.seen-cell input[type="checkbox"]:checked) td:first-child{
+        box-shadow: inset 4px 0 0 rgba(28,200,138,.90);
+      }
+      /* Optional: “Seen” pill on mobile */
+      @media (max-width: 720px){
+        tr:has(.seen-cell input[type="checkbox"]:checked){
+          border-color: rgba(28,200,138,.45) !important;
+          box-shadow: 0 10px 24px rgba(28,200,138,.18), var(--shadow2) !important;
+          background: rgba(28,200,138,.08) !important;
+        }
+        tr:has(.seen-cell input[type="checkbox"]:checked) .seen-cell::after{
+          content: "Seen";
+          display: inline-block;
+          margin-left: 10px;
+          padding: 2px 8px;
+          border-radius: 999px;
+          font-size: .78rem;
+          font-weight: 900;
+          color: #065f46;
+          background: rgba(28,200,138,.18);
+          border: 1px solid rgba(28,200,138,.25);
+          vertical-align: middle;
+        }
+      }
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px){
+      .grid2{ grid-template-columns: 1fr; }
+    }
+
+    /* Mobile: stack each row into a “card” (no horizontal scroll) */
+    @media (max-width: 720px){
+      body{ padding: 12px 10px 24px; }
+
+      .heroRow{ flex-direction: column; align-items: stretch; }
+      .kpis{ justify-content:flex-start; }
+      .kpis .pill{ width: calc(50% - 5px); }
+
+      .notice{ margin: 12px 12px 14px; }
+      .heroFooter{ padding: 10px 12px 14px; }
+
+      .cardHead{ padding: 12px 12px; }
+      .cardBody{ padding: 12px 12px 14px; }
+
+      .chipText{ max-width: 28ch; }
+
+      /* stack table rows */
+      table, thead, tbody, th, td, tr{ display:block; }
+      thead{ display:none; }
+
+      .tableWrap{ background: transparent; border:0; box-shadow:none; overflow: visible; }
+      tbody{ display:flex; flex-direction:column; gap:10px; }
+
+      tr{
+        border: 1px solid var(--border);
+        border-radius: var(--radiusSm);
+        background: rgba(255,255,255,.92);
+        box-shadow: var(--shadow2);
+        overflow:hidden;
+      }
+
+      td{
+        border-bottom: 1px solid rgba(2,6,23,.06);
+        white-space: normal;
+        padding: 10px 12px;
+      }
+      td:last-child{ border-bottom:0; }
+
+      td[data-label]{
+        display:flex;
+        gap:10px;
+        align-items:flex-start;
+        justify-content:space-between;
+      }
+      td[data-label]::before{
+        content: attr(data-label);
+        color: var(--muted);
+        font-weight: 900;
+        flex: 0 0 110px;
+      }
+
+      .seen-cell{
+        width:auto;
+        text-align:left;
+      }
+    }
+
+    @media (max-width: 420px){
+      .kpis .pill{ width: 100%; }
+    }
+
+    @media print{
+      body{ background:#fff; padding:0; }
+      .pageHero, .card{ box-shadow:none; border-radius:0; border:0; backdrop-filter:none; }
+      .notice{ background:#fff; border-color:#000; }
+      .pill, .updated, .chip{ box-shadow:none; background:#fff; border: 1px solid #000; }
+      .count{ background:#000 !important; }
+      tr:nth-child(even) td{ background:#fff; }
+      input[type="checkbox"]{ accent-color:#000; }
+    }
   </style>
 </head>
 
 <body>
+  {% with associates=associates_in|default:"" visitors=visitors_in|default:"" contractors=contractors_in|default:"" %}
+
   <div class="wrap">
-    <div class="card">
-      <div class="topbar">
-        <div>
-          <h1>On-site Staff</h1>
-          <p class="sub">
-            <strong>{{ site.name }}</strong><br>
-            <span class="muted">Address: {{ site.address|default:"—" }}</span>
-          </p>
+
+    <!-- HERO -->
+    <div class="pageHero">
+      <div class="heroRow">
+        <div class="heroLeft">
+          <div class="logo" aria-hidden="true"></div>
+          <div style="min-width:0;">
+            <h1>Fire Register</h1>
+            <p class="sub">
+              <strong>{{ site.name }}</strong><br>
+              <span>Address: {{ site.address|default:"—" }}</span>
+            </p>
+          </div>
         </div>
 
-        <div class="pill" title="Current number of staff checked in">
-          <span>Currently in</span>
-          <span class="count">{{ who_is_in|length }}</span>
+        <div class="kpis" aria-label="Counts">
+          <div class="pill" title="Total people currently on site">
+            <span>Total</span>
+            <span class="count danger">{{ total_count }}</span>
+          </div>
+          <div class="pill" title="Staff currently on site">
+            <span>Staff</span>
+            <span class="count brand">{{ staff_count }}</span>
+          </div>
+          <div class="pill" title="Associates currently on site">
+            <span>Assoc.</span>
+            <span class="count info">{{ assoc_count }}</span>
+          </div>
+          <div class="pill" title="Visitors currently on site">
+            <span>Visitors</span>
+            <span class="count warn">{{ vis_count }}</span>
+          </div>
+          <div class="pill" title="Contractors currently on site">
+            <span>Contractors</span>
+            <span class="count">{{ cont_count }}</span>
+          </div>
         </div>
       </div>
 
       <div class="notice">
-        <strong>Fire register</strong>
-        <p>This list shows all staff currently checked in for evacuation purposes.</p>
+        <div class="ico">🚨</div>
+        <div>
+          <strong>Evacuation roll-call</strong>
+          <p>Use this register to confirm who is (or was just) on site during an incident.</p>
+        </div>
       </div>
 
-      <div class="list-head">
-        <h2>Names</h2>
-        <div class="muted">Alphabetical</div>
-      </div>
-
-      {% if who_is_in %}
-        <ul class="grid">
-          {% for staff in who_is_in %}
-            <li class="item">
-              <span class="name">{{ staff.name }}</span>
-            </li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        <div class="empty">No staff currently on site.</div>
-      {% endif %}
-
-      <div class="list-head">
-        <h2>People On Site</h2>
-        <div class="muted">Compact view</div>
-      </div>
-      <table class="compact-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Checked In</th>
-            <th class="seen-cell">Seen</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for staff in who_is_in %}
-            <tr>
-              <td>{{ staff.name }}</td>
-              <td>Staff</td>
-              <td></td>
-              <td class="seen-cell"><input type="checkbox" id="seen_staff_{{ staff.id }}" name="seen_staff_{{ staff.id }}"></td>
-            </tr>
-          {% endfor %}
-          {% for a in associates_in %}
-            <tr>
-              <td>{{ a.name }}</td>
-              <td>Associate</td>
-              <td>{{ a.signed_in_at }}</td>
-              <td class="seen-cell"><input type="checkbox" id="seen_associate_{{ a.id }}" name="seen_associate_{{ a.id }}"></td>
-            </tr>
-          {% endfor %}
-          {% for v in visitors_in %}
-            <tr>
-              <td>{{ v.name }}</td>
-              <td>Visitor</td>
-              <td>{{ v.signed_in_at|time:"H:i" }}</td>
-              <td class="seen-cell"><input type="checkbox" id="seen_visitor_{{ v.id }}" name="seen_visitor_{{ v.id }}"></td>
-            </tr>
-          {% endfor %}
-          {% for c in contractors_in %}
-            <tr>
-              <td>{{ c.name }}</td>
-              <td>Contractor</td>
-              <td>{{ c.signed_in_at|time:"H:i" }}</td>
-              <td class="seen-cell"><input type="checkbox" id="seen_contractor_{{ c.id }}" name="seen_contractor_{{ c.id }}"></td>
-            </tr>
-          {% endfor %}
-          {% if not who_is_in and not associates_in and not visitors_in and not contractors_in %}
-            <tr><td colspan="4" class="muted">No one currently on site.</td></tr>
-          {% endif %}
-        </tbody>
-      </table>
-
-      <div class="footer">
+      <div class="heroFooter">
         <div class="updated">
           <span class="dot"></span>
           <span>Last updated: {{ now }}</span>
         </div>
-        <div class="muted">Tip: print this page during incidents (Ctrl+P).</div>
       </div>
     </div>
+
+    <div class="grid2">
+
+      <!-- STAFF CARD -->
+      <div class="card">
+        <div class="cardHead">
+          <div>
+            <div class="cardTitle">On-site Staff</div>
+            <div class="cardSub">Alphabetical • includes “just left” within your cutoff</div>
+          </div>
+          <div class="pill" title="Staff currently checked in">
+            <span>Currently in</span>
+            <span class="count brand">{{ staff_count }}</span>
+          </div>
+        </div>
+
+        <div class="cardBody">
+          <div class="list-head">
+            <div class="cardTitle" style="font-size:1rem;">Names</div>
+            <div class="meta">Quick roll-call</div>
+          </div>
+
+          {% if who_is_in %}
+            <ul class="names">
+              {% for staff in who_is_in %}
+                {% if staff.type == 'Staff' %}
+                  <li class="chip">
+                    <span class="chipText">{{ staff.name }}</span>
+                    {% if staff.recently_left %}
+                      <span class="left">just left</span>
+                    {% else %}
+                      <span class="mini">staff</span>
+                    {% endif %}
+                  </li>
+                {% endif %}
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="empty">No staff currently on site.</div>
+          {% endif %}
+
+          <div class="list-head" style="margin-top:10px;">
+            <div class="cardTitle" style="font-size:1rem;">Staff on site</div>
+            <div class="meta">Seen tick list</div>
+          </div>
+
+          <div class="tableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Checked in</th>
+                  <th class="seen-cell">Seen</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for p in who_is_in %}
+                  {% if p.type == 'Staff' %}
+                    <tr>
+                      <td data-label="Name">
+                        <span>
+                          {{ p.name }}
+                          {% if p.recently_left %}
+                            <span style="color:var(--muted);font-weight:900;">(just left)</span>
+                          {% endif %}
+                        </span>
+                      </td>
+                      <td data-label="Checked in" class="timeCell">{% if p.checked_in %}{{ p.checked_in }}{% else %}—{% endif %}</td>
+                      <td data-label="Seen" class="seen-cell">
+                        <input type="checkbox" id="seen_staff_{{ p.id }}" name="seen_staff_{{ p.id }}">
+                      </td>
+                    </tr>
+                  {% endif %}
+                {% endfor %}
+                {% if not who_is_in %}
+                  <tr><td colspan="3" style="color:var(--muted); padding: 14px;">No staff currently on site.</td></tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- NON-STAFF CARD -->
+      <div class="card">
+        <div class="cardHead">
+          <div>
+            <div class="cardTitle">Visitors / Associates / Contractors</div>
+            <div class="cardSub">Non-staff currently on site</div>
+          </div>
+          <div class="pill">
+            <span>Currently in</span>
+            <span class="count danger">{{ non_staff_count }}</span>
+          </div>
+        </div>
+
+        <div class="cardBody">
+          <div class="list-head">
+            <div class="cardTitle" style="font-size:1rem;">People</div>
+            <div class="meta">Seen tick list</div>
+          </div>
+
+          <div class="tableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Checked in</th>
+                  <th class="seen-cell">Seen</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for a in associates %}
+                  <tr>
+                    <td data-label="Name">{{ a.name }}</td>
+                    <td data-label="Type"><span class="typeTag assoc">Associate</span></td>
+                    <td data-label="Checked in" class="timeCell">{{ a.signed_in_at }}</td>
+                    <td data-label="Seen" class="seen-cell">
+                      <input type="checkbox" id="seen_associate_{{ a.id }}" name="seen_associate_{{ a.id }}">
+                    </td>
+                  </tr>
+                {% endfor %}
+                {% for v in visitors %}
+                  <tr>
+                    <td data-label="Name">{{ v.name }}</td>
+                    <td data-label="Type"><span class="typeTag vis">Visitor</span></td>
+                    <td data-label="Checked in" class="timeCell">{{ v.signed_in_at|date:"j M Y, g:i a" }}</td>
+                    <td data-label="Seen" class="seen-cell">
+                      <input type="checkbox" id="seen_visitor_{{ v.id }}" name="seen_visitor_{{ v.id }}">
+                    </td>
+                  </tr>
+                {% endfor %}
+                {% for c in contractors %}
+                  <tr>
+                    <td data-label="Name">{{ c.name }}</td>
+                    <td data-label="Type"><span class="typeTag cont">Contractor</span></td>
+                    <td data-label="Checked in" class="timeCell">{{ c.signed_in_at|date:"j M Y, g:i a" }}</td>
+                    <td data-label="Seen" class="seen-cell">
+                      <input type="checkbox" id="seen_contractor_{{ c.id }}" name="seen_contractor_{{ c.id }}">
+                    </td>
+                  </tr>
+                {% endfor %}
+
+                {% if not associates and not visitors and not contractors %}
+                  <tr><td colspan="4" style="color:var(--muted); padding: 14px;">No non-staff currently on site.</td></tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
+
+  {% endwith %}
 </body>
 </html>

@@ -261,48 +261,84 @@ def portal_fire(request, token: str):
     # Use the existing public_staff_list.html template for fire roll call
     latest_dir = AccessEvent.objects.filter(site=site, staff_id=OuterRef("pk"), on_site=True).order_by("-occurred_at").values("direction")[:1]
     latest_at = AccessEvent.objects.filter(site=site, staff_id=OuterRef("pk"), on_site=True).order_by("-occurred_at").values("occurred_at")[:1]
-    who_is_in = StaffMember.objects.filter(site=site, is_active=True).annotate(
+    who_is_in_staff = StaffMember.objects.filter(site=site, is_active=True).annotate(
         last_direction=Subquery(latest_dir),
         last_at=Subquery(latest_at),
     ).filter(last_direction=AccessEvent.IN).order_by("name")
+
+    # Calculate cutoff based on site setting, used to include recent sign-outs
+    from django.db.models import Q
+    from datetime import timedelta
+    from django.utils import timezone
+    cutoff_minutes = getattr(site, 'fire_rollcall_cutoff_minutes', 15) or 15
+    cutoff = timezone.now() - timedelta(minutes=int(cutoff_minutes))
+
+    # Also include staff who very recently signed out (within cutoff)
+    staff_recently_left = StaffMember.objects.filter(site=site, is_active=True).annotate(
+        last_direction=Subquery(latest_dir),
+        last_at=Subquery(latest_at),
+    ).filter(last_direction=AccessEvent.OUT, last_at__gte=cutoff).order_by("name")
+
+    # Include visitors/contractors/associates who are currently signed in or recently signed out
+    from .models import Visitor, Contractor, AssociatedStaff
+    visitors_in = Visitor.objects.filter(site=site, is_active=True).filter(
+        Q(signed_in_at__isnull=False, signed_out_at__isnull=True) |
+        Q(signed_out_at__isnull=False, signed_out_at__gte=cutoff)
+    ).order_by('name')
+    contractors_in = Contractor.objects.filter(site=site, is_active=True).filter(
+        Q(signed_in_at__isnull=False, signed_out_at__isnull=True) |
+        Q(signed_out_at__isnull=False, signed_out_at__gte=cutoff)
+    ).order_by('name')
+    associates_in = AssociatedStaff.objects.filter(site=site, is_active=True).filter(
+        Q(signed_in_at__isnull=False, signed_out_at__isnull=True) |
+        Q(signed_out_at__isnull=False, signed_out_at__gte=cutoff)
+    ).order_by('name')
+
+    combined = list(who_is_in_staff) + list(staff_recently_left) + list(associates_in) + list(visitors_in) + list(contractors_in)
+    # Deduplicate by name (prefer staff over others)
+    seen = set()
+    people_on_site = []
+    for obj in combined:
+        name_key = (obj.name or '').strip().lower()
+        if not name_key or name_key in seen:
+            continue
+        seen.add(name_key)
+        if isinstance(obj, StaffMember):
+            ptype = "Staff"
+            checked_in = getattr(obj, 'last_at', None)
+            pid = obj.id
+            recently_left = bool(getattr(obj, 'last_direction', None) == AccessEvent.OUT and getattr(obj, 'last_at', None) and obj.last_at >= cutoff)
+        elif isinstance(obj, AssociatedStaff):
+            ptype = "Associate"
+            checked_in = obj.signed_in_at
+            pid = obj.id
+            recently_left = bool(obj.signed_out_at and obj.signed_out_at >= cutoff)
+        elif isinstance(obj, Visitor):
+            ptype = "Visitor"
+            checked_in = obj.signed_in_at
+            pid = obj.id
+            recently_left = bool(obj.signed_out_at and obj.signed_out_at >= cutoff)
+        elif isinstance(obj, Contractor):
+            ptype = "Contractor"
+            checked_in = obj.signed_in_at
+            pid = obj.id
+            recently_left = bool(obj.signed_out_at and obj.signed_out_at >= cutoff)
+        else:
+            ptype = "Person"
+            checked_in = None
+            pid = getattr(obj, 'id', None)
+        people_on_site.append({"name": obj.name, "type": ptype, "checked_in": checked_in, "id": pid, "recently_left": recently_left if 'recently_left' in locals() else False})
+
+    who_is_in = sorted(people_on_site, key=lambda x: (x.get('name') or '').lower())
     normal_scan = reverse('scan_page', kwargs={'token': token})
-    return render(request, "access/public_staff_list.html", {"site": site, "who_is_in": who_is_in, "now": now(), "token": token, "normal_scan_url": normal_scan})
-from django.utils.timezone import now
-
-# Public view for on-site staff (fire evacuation)
-def public_staff_list(request, fire_token: str):
-    from core.models import SiteToken
-    token_obj = get_object_or_404(SiteToken, token=fire_token, type="fire", is_active=True, site__is_active=True)
-    site = token_obj.site
-    latest_dir = AccessEvent.objects.filter(site=site, staff_id=OuterRef("pk"), on_site=True).order_by("-occurred_at").values("direction")[:1]
-    latest_at = AccessEvent.objects.filter(site=site, staff_id=OuterRef("pk"), on_site=True).order_by("-occurred_at").values("occurred_at")[:1]
-    who_is_in = StaffMember.objects.filter(site=site, is_active=True).annotate(
-        last_direction=Subquery(latest_dir),
-        last_at=Subquery(latest_at),
-    ).filter(last_direction=AccessEvent.IN).order_by("name")
-    from .models import Visitor, Contractor, AssociatedStaff
-    visitors_in = Visitor.objects.filter(site=site, is_active=True, signed_in_at__isnull=False, signed_out_at__isnull=True).order_by('-signed_in_at', 'name')
-    contractors_in = Contractor.objects.filter(site=site, is_active=True, signed_in_at__isnull=False, signed_out_at__isnull=True).order_by('-signed_in_at', 'name')
-    associates_in = AssociatedStaff.objects.filter(site=site, is_active=True, signed_in_at__isnull=False, signed_out_at__isnull=True).order_by('name')
-    print('DEBUG who_is_in:', list(who_is_in.values('id', 'name', 'last_at')) if hasattr(who_is_in, 'values') else who_is_in)
-    print('DEBUG associates_in:', list(associates_in.values('id', 'name', 'signed_in_at')) if hasattr(associates_in, 'values') else associates_in)
-    print('DEBUG visitors_in:', list(visitors_in.values('id', 'name', 'signed_in_at', 'is_active')) if hasattr(visitors_in, 'values') else visitors_in)
-    print('DEBUG contractors_in:', list(contractors_in.values('id', 'name', 'signed_in_at', 'is_active')) if hasattr(contractors_in, 'values') else contractors_in)
-    # Add visitors, contractors, associates currently in
-    from .models import Visitor, Contractor, AssociatedStaff
-    visitors_in = Visitor.objects.filter(site=site, is_active=True, signed_in_at__isnull=False, signed_out_at__isnull=True).order_by('-signed_in_at', 'name')
-    contractors_in = Contractor.objects.filter(site=site, is_active=True, signed_in_at__isnull=False, signed_out_at__isnull=True).order_by('-signed_in_at', 'name')
-    associates_in = AssociatedStaff.objects.filter(site=site, is_active=True, signed_out_at__isnull=True).order_by('name')
-    print('DEBUG visitors_in:', list(visitors_in.values('id', 'name', 'site_id', 'is_active', 'signed_in_at', 'signed_out_at')))
-    print('DEBUG contractors_in:', list(contractors_in.values('id', 'name', 'site_id', 'is_active', 'signed_in_at', 'signed_out_at')))
-
-    # Add visitors, contractors, associates currently in
-    from .models import Visitor, Contractor, AssociatedStaff
-    visitors_in = Visitor.objects.filter(site=site, is_active=True, signed_in_at__isnull=False, signed_out_at__isnull=True).order_by('name')
-    contractors_in = Contractor.objects.filter(site=site, is_active=True, signed_in_at__isnull=False, signed_out_at__isnull=True).order_by('name')
-    associates_in = AssociatedStaff.objects.filter(site=site, is_active=True, signed_in_at__isnull=False, signed_out_at__isnull=True).order_by('name')
-
-    fire_url = request.build_absolute_uri(reverse("public_staff_list", kwargs={"fire_token": fire_token}))
+    fire_url = request.build_absolute_uri(reverse("public_staff_list", kwargs={"fire_token": token}))
+    # counts for template
+    staff_count = sum(1 for p in who_is_in if p.get('type') == 'Staff')
+    assoc_count = associates_in.count() if hasattr(associates_in, 'count') else len(list(associates_in))
+    vis_count = visitors_in.count() if hasattr(visitors_in, 'count') else len(list(visitors_in))
+    cont_count = contractors_in.count() if hasattr(contractors_in, 'count') else len(list(contractors_in))
+    total_count = len(who_is_in)
+    non_staff_count = assoc_count + vis_count + cont_count
     return render(request, "access/public_staff_list.html", {
         "site": site,
         "who_is_in": who_is_in,
@@ -311,6 +347,109 @@ def public_staff_list(request, fire_token: str):
         "associates_in": associates_in,
         "now": now(),
         "fire_url": fire_url,
+        "token": token,
+        "normal_scan_url": normal_scan,
+        "staff_count": staff_count,
+        "assoc_count": assoc_count,
+        "vis_count": vis_count,
+        "cont_count": cont_count,
+        "total_count": total_count,
+        "non_staff_count": non_staff_count,
+    })
+from django.utils.timezone import now
+
+# Public view for on-site staff (fire evacuation)
+def public_staff_list(request, fire_token: str):
+    from core.models import SiteToken
+    token_obj = get_object_or_404(SiteToken, token=fire_token, type="fire", is_active=True, site__is_active=True)
+    site = token_obj.site
+
+    latest_dir = AccessEvent.objects.filter(site=site, staff_id=OuterRef("pk"), on_site=True).order_by("-occurred_at").values("direction")[:1]
+    latest_at = AccessEvent.objects.filter(site=site, staff_id=OuterRef("pk"), on_site=True).order_by("-occurred_at").values("occurred_at")[:1]
+    who_is_in_staff = StaffMember.objects.filter(site=site, is_active=True).annotate(
+        last_direction=Subquery(latest_dir),
+        last_at=Subquery(latest_at),
+    ).filter(last_direction=AccessEvent.IN).order_by("name")
+
+    # Include visitors/contractors/associates who are either currently signed in OR signed out within the last 15 minutes
+    from .models import Visitor, Contractor, AssociatedStaff
+    from django.db.models import Q
+    from datetime import timedelta
+    cutoff_minutes = getattr(site, 'fire_rollcall_cutoff_minutes', 15) or 15
+    cutoff = timezone.now() - timedelta(minutes=int(cutoff_minutes))
+    visitors_in = Visitor.objects.filter(site=site, is_active=True).filter(
+        Q(signed_in_at__isnull=False, signed_out_at__isnull=True) |
+        Q(signed_out_at__isnull=False, signed_out_at__gte=cutoff)
+    ).order_by('name')
+    contractors_in = Contractor.objects.filter(site=site, is_active=True).filter(
+        Q(signed_in_at__isnull=False, signed_out_at__isnull=True) |
+        Q(signed_out_at__isnull=False, signed_out_at__gte=cutoff)
+    ).order_by('name')
+    associates_in = AssociatedStaff.objects.filter(site=site, is_active=True).filter(
+        Q(signed_in_at__isnull=False, signed_out_at__isnull=True) |
+        Q(signed_out_at__isnull=False, signed_out_at__gte=cutoff)
+    ).order_by('name')
+
+    # Combined alphabetical list for top section and count (deduplicated)
+    combined = list(who_is_in_staff) + list(associates_in) + list(visitors_in) + list(contractors_in)
+    seen = set()
+    people_on_site = []
+    for obj in combined:
+        name_key = (obj.name or '').strip().lower()
+        if not name_key or name_key in seen:
+            continue
+        seen.add(name_key)
+        if isinstance(obj, StaffMember):
+            ptype = "Staff"
+            checked_in = getattr(obj, 'last_at', None)
+            pid = obj.id
+            recently_left = False
+        elif isinstance(obj, AssociatedStaff):
+            ptype = "Associate"
+            checked_in = obj.signed_in_at
+            pid = obj.id
+            recently_left = bool(obj.signed_out_at and obj.signed_out_at >= cutoff)
+        elif isinstance(obj, Visitor):
+            ptype = "Visitor"
+            checked_in = obj.signed_in_at
+            pid = obj.id
+            recently_left = bool(obj.signed_out_at and obj.signed_out_at >= cutoff)
+        elif isinstance(obj, Contractor):
+            ptype = "Contractor"
+            checked_in = obj.signed_in_at
+            pid = obj.id
+            recently_left = bool(obj.signed_out_at and obj.signed_out_at >= cutoff)
+        else:
+            ptype = "Person"
+            checked_in = None
+            pid = getattr(obj, 'id', None)
+            recently_left = False
+        people_on_site.append({"name": obj.name, "type": ptype, "checked_in": checked_in, "id": pid, "recently_left": recently_left})
+
+    who_is_in = sorted(people_on_site, key=lambda x: (x.get('name') or '').lower())
+
+    fire_url = request.build_absolute_uri(reverse("public_staff_list", kwargs={"fire_token": fire_token}))
+    # counts for template
+    staff_count = sum(1 for p in who_is_in if p.get('type') == 'Staff')
+    assoc_count = associates_in.count() if hasattr(associates_in, 'count') else len(list(associates_in))
+    vis_count = visitors_in.count() if hasattr(visitors_in, 'count') else len(list(visitors_in))
+    cont_count = contractors_in.count() if hasattr(contractors_in, 'count') else len(list(contractors_in))
+    total_count = len(who_is_in)
+    non_staff_count = assoc_count + vis_count + cont_count
+    return render(request, "access/public_staff_list.html", {
+        "site": site,
+        "who_is_in": who_is_in,
+        "visitors_in": visitors_in,
+        "contractors_in": contractors_in,
+        "associates_in": associates_in,
+        "now": now(),
+        "fire_url": fire_url,
+        "staff_count": staff_count,
+        "assoc_count": assoc_count,
+        "vis_count": vis_count,
+        "cont_count": cont_count,
+        "total_count": total_count,
+        "non_staff_count": non_staff_count,
     })
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
@@ -632,6 +771,19 @@ def manager_staff(request, site_id: int):
     invite_error = None
 
     if request.method == "POST":
+        # Site settings update (fire rollcall cutoff)
+        if "update_site_settings" in request.POST:
+            try:
+                minutes = int(request.POST.get('fire_rollcall_cutoff_minutes') or 15)
+                if minutes < 0:
+                    raise ValueError()
+                site.fire_rollcall_cutoff_minutes = minutes
+                site.save()
+                messages.success(request, f"Site settings updated: fire rollcall cutoff set to {minutes} minutes.")
+            except Exception:
+                messages.error(request, "Invalid cutoff value. Please enter a positive integer.")
+            return redirect('manager_staff', site_id=site.id)
+
         if "invite_manager" in request.POST:
             invite_form = ManagerInviteForm(request.POST)
             if invite_form.is_valid():

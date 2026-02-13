@@ -30,6 +30,7 @@ class Site(models.Model):
     is_active = models.BooleanField(default=True)
     confidentiality_terms = models.TextField(blank=True, default="", help_text="Custom confidentiality terms for this site. Shown on sign-in forms.")
     health_safety_procedures = models.TextField(blank=True, default="", help_text="Health and safety procedures for this site. Shown on sign-in forms.")
+    fire_rollcall_cutoff_minutes = models.PositiveIntegerField(default=15, help_text="Minutes after sign-out to include someone in the fire roll call list")
 
     def __str__(self) -> str:
         return self.name

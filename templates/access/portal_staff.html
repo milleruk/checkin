@@ -351,7 +351,7 @@
                       <span class="badge badge-soft badge-soft-info mr-1">Associate</span>
                       <span class="badge badge-soft badge-soft-dark">{{ a.get_association_type_display }}</span>
                     </td>
-                    <td>{{ a.signed_in_at|time:"H:i" }}</td>
+                    <td>{{ a.signed_in_at|date:"j M Y, g:i a" }}</td>
                     <td class="text-right pr-3">
                       <button type="button" class="btn btn-danger btn-sm js-signout"
                               data-entity-type="associate" data-entity-id="{{ a.id }}" data-entity-name="{{ a.name|escapejs }}">
@@ -366,7 +366,7 @@
                     <tr data-name="{{ v.name|lower }}" data-type="visitor">
                       <td class="font-weight-bold text-gray-800">{{ v.name }}</td>
                       <td><span class="badge badge-soft badge-soft-warning">Visitor</span></td>
-                      <td>{{ v.signed_in_at|time:"H:i" }}</td>
+                      <td>{{ v.signed_in_at|date:"j M Y, g:i a" }}</td>
                       <td class="text-right pr-3">
                         <button type="button" class="btn btn-danger btn-sm js-signout"
                                 data-entity-type="visitor" data-entity-id="{{ v.id }}" data-entity-name="{{ v.name|escapejs }}">
@@ -382,7 +382,7 @@
                     <tr data-name="{{ c.name|lower }}" data-type="contractor">
                       <td class="font-weight-bold text-gray-800">{{ c.name }}</td>
                       <td><span class="badge badge-soft badge-soft-dark">Contractor</span></td>
-                      <td>{{ c.signed_in_at|time:"H:i" }}</td>
+                      <td>{{ c.signed_in_at|date:"j M Y, g:i a" }}</td>
                       <td class="text-right pr-3">
                         <button type="button" class="btn btn-danger btn-sm js-signout"
                                 data-entity-type="contractor" data-entity-id="{{ c.id }}" data-entity-name="{{ c.name|escapejs }}">
