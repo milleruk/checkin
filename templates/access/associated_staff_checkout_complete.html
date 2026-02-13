@@ -1,0 +1,14 @@
+{% extends "sbadmin/public_base.html" %}
+{% block content %}
+<div class="container py-4">
+  <div class="text-center mb-4">
+    <h1 class="h3 mb-1">You are now signed out</h1>
+    <div class="text-muted">Thank you. You have successfully signed out as associated staff.</div>
+  </div>
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+      <a href="{% url 'portal_public' token=token %}" class="btn btn-primary btn-block">Return to Main Portal</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

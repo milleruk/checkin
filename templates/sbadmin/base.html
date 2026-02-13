@@ -1,0 +1,79 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="theme-color" content="#4e73df">
+  <title>{% block title %}Check In{% endblock %}</title>
+
+  {# Optional favicon hook #}
+  <link rel="icon" href="{% static 'favicon.ico' %}">
+
+  <!-- Vendor CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/4.1.4/css/sb-admin-2.min.css">
+
+  <style>
+    /* Small QoL improvements without fighting SB Admin */
+    .container-fluid { padding-bottom: 1rem; }
+    .content-pagehead .title { font-weight: 800; letter-spacing: -0.02em; margin: 0; }
+    .content-pagehead .subtitle { margin: .25rem 0 0; color: #6c757d; font-size: .95rem; }
+    .messages-wrap .alert { margin-bottom: .75rem; }
+  </style>
+
+  {% block extra_css %}{% endblock %}
+
+  {# CKEditor (only load when needed) #}
+  {% block editor_js %}
+     {# CKEditor removed: no longer used #}
+  {% endblock editor_js %}
+</head>
+
+<body id="page-top">
+<div id="wrapper">
+
+  {% include "sbadmin/partials/sidebar.html" %}
+
+  <div id="content-wrapper" class="d-flex flex-column">
+    <div id="content">
+
+      {% include "sbadmin/partials/topbar.html" %}
+
+      <div class="container-fluid">
+
+        {# Optional standard page header wrapper #}
+        {% block pagehead %}{% endblock pagehead %}
+
+        {# Global Django messages #}
+        {% if messages %}
+          <div class="messages-wrap">
+            {% for message in messages %}
+              <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+
+    {% include "sbadmin/partials/footer.html" %}
+  </div>
+
+</div>
+
+<!-- Vendor JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/4.1.4/js/sb-admin-2.min.js"></script>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,57 @@
+{% load static %}
+
+<header class="public-header">
+
+  <div class="public-shell d-flex align-items-center justify-content-between py-2">
+
+    <!-- Left: Logo + System -->
+    <div class="d-flex align-items-center">
+
+      {% if site.logo %}
+        <img src="{{ site.logo.url }}"
+             alt="{{ site.name }}"
+             style="height:36px; width:auto;"
+             class="mr-2">
+      {% else %}
+        <img src="{% static 'img/logo.png' %}"
+             alt="Logo"
+             style="height:36px; width:auto;"
+             class="mr-2">
+      {% endif %}
+
+      <div>
+        <div class="font-weight-bold text-white" style="font-size:0.95rem;">
+          {{ site.name|default:"Check In / Out System" }}
+        </div>
+
+        {% if site.address %}
+          <div class="small text-white-50" style="line-height:1;">
+            {{ site.address }}
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <!-- Right: Security reassurance -->
+    <div class="d-none d-md-flex align-items-center text-white-50 small">
+      <i class="fas fa-shield-alt mr-1"></i>
+      Secure Check-In Portal
+    </div>
+
+  </div>
+</header>
+
+<style>
+.public-header {
+  background: linear-gradient(135deg, #1f6ed4, #1cb4d3);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+/* Mobile tightening */
+@media (max-width: 575.98px) {
+  .public-header img {
+    height: 30px !important;
+  }
+}
+</style>

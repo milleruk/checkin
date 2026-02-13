@@ -1,0 +1,179 @@
+{% extends "sbadmin/base.html" %}
+{% block title %}Site Details{% endblock %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="h3 mb-0 text-gray-800">{{ site.name }}</h1>
+    <div class="small text-muted">Site details & manager assignments</div>
+  </div>
+  <div>
+    <a href="{% url 'superuser_sites' %}" class="btn btn-sm btn-outline-secondary">
+      <i class="fas fa-arrow-left mr-1"></i> Back to sites
+    </a>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Site summary -->
+  <div class="col-lg-5 mb-4">
+    <div class="card shadow">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-building text-primary mr-2"></i>
+          <h6 class="m-0 font-weight-bold text-primary">Site Summary</h6>
+        </div>
+        <span class="badge badge-{% if site.is_active %}success{% else %}secondary{% endif %}">
+          {% if site.is_active %}Active{% else %}Inactive{% endif %}
+        </span>
+      </div>
+      <div class="card-body small">
+        <div class="mb-2"><strong>Name:</strong> {{ site.name }}</div>
+        <div class="mb-2">
+          <strong>Address:</strong>
+          <div class="text-muted">{{ site.address|default:"—" }}</div>
+        </div>
+        <div class="mb-0"><strong>Site ID:</strong> {{ site.id }}</div>
+      </div>
+    </div>
+
+    <!-- Add manager -->
+    <div class="card shadow mt-4">
+      <div class="card-header py-3 d-flex align-items-center">
+        <i class="fas fa-user-plus text-primary mr-2"></i>
+        <h6 class="m-0 font-weight-bold text-primary">Add Manager</h6>
+      </div>
+      <div class="card-body">
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="site" value="{{ site.id }}">
+          <input type="hidden" name="assign_manager" value="1">
+
+          <div class="form-group mb-3">
+            <label for="{{ assign_form.user.id_for_label }}" class="mb-1">User</label>
+            {{ assign_form.user }}
+            {% for error in assign_form.user.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          {% if assign_form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for error in assign_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+            </div>
+          {% endif %}
+
+          <button class="btn btn-primary btn-block">
+            <i class="fas fa-user-shield mr-1"></i> Add Manager
+          </button>
+
+          {% if assigned %}
+            <div class="alert alert-success mt-3 mb-0">
+              <i class="fas fa-check-circle mr-1"></i> Assigned <strong>{{ assigned.username }}</strong> to this site.
+            </div>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Managers list -->
+  <div class="col-lg-7 mb-4">
+    <div class="card shadow">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-user-shield text-info mr-2"></i>
+          <h6 class="m-0 font-weight-bold text-info">Managers Assigned</h6>
+          <span class="badge badge-pill badge-light ml-2">{{ managers|length }}</span>
+        </div>
+        <div style="min-width:260px;">
+          <input type="text" id="managerFilter" class="form-control form-control-sm" placeholder="Search managers…">
+        </div>
+      </div>
+
+      <div class="card-body p-0">
+        {% if managers %}
+          <div class="list-group list-group-flush" id="managerList">
+            {% for manager in managers %}
+              <a href="{% url 'superuser_user_detail' manager.id %}"
+                 class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                 data-manager-text="{{ manager.username|lower }} {{ manager.email|default:''|lower }}">
+                <div>
+                  <div class="font-weight-bold text-gray-800">{{ manager.username }}</div>
+                  <div class="small text-muted">{{ manager.email|default:"—" }}</div>
+                </div>
+                <span class="badge badge-light">ID: {{ manager.id }}</span>
+              </a>
+            {% endfor %}
+          </div>
+          <div id="noManagerResults" class="text-center text-muted py-4" style="display:none;">
+            No matching managers.
+          </div>
+        {% else %}
+          <div class="p-4">
+            <div class="alert alert-info mb-0">No managers assigned.</div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow mt-4">
+      <div class="card-header py-3 d-flex align-items-center">
+        <i class="fas fa-key text-warning mr-2"></i>
+        <h6 class="m-0 font-weight-bold text-warning">Portal Tokens</h6>
+      </div>
+      <div class="card-body small">
+        <ul class="list-group">
+          {% for token in site.tokens.all %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span><b>{{ token.get_type_display }}:</b> <code>{{ token.token }}</code></span>
+              <form method="post" action="{% url 'rotate_token' site.id %}" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="token_type" value="{{ token.type }}">
+                <input type="hidden" name="confirm" value="on">
+                <button type="submit" class="btn btn-sm btn-danger">Rotate</button>
+              </form>
+            </li>
+          {% empty %}
+            <li class="list-group-item">No tokens found for this site.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+<script>
+(function () {
+  // Form control styling safety
+  document.querySelectorAll('select, input, textarea').forEach(function(el){
+    if (el.type === 'hidden' || el.type === 'checkbox' || el.type === 'radio') return;
+    if (!el.classList.contains('form-control')) el.classList.add('form-control');
+    if (!el.classList.contains('form-control-sm')) el.classList.add('form-control-sm');
+  });
+
+  // Manager list filter
+  var input = document.getElementById('managerFilter');
+  var list = document.getElementById('managerList');
+  var noRes = document.getElementById('noManagerResults');
+
+  function applyFilter() {
+    if (!input || !list) return;
+    var q = (input.value || '').toLowerCase().trim();
+    var items = list.querySelectorAll('[data-manager-text]');
+    var visible = 0;
+
+    items.forEach(function(item){
+      var text = item.getAttribute('data-manager-text') || '';
+      var show = (!q) || text.indexOf(q) !== -1;
+      item.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    if (noRes) noRes.style.display = (items.length > 0 && visible === 0) ? '' : 'none';
+  }
+
+  if (input) input.addEventListener('input', applyFilter);
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "sbadmin/base.html" %}
+{% block title %}Staff Keypad Sign-In — {{ site.name }}{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4 text-center">Staff Keypad Sign-In</h2>
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow">
+        <div class="card-body">
+          <form id="keypad-form" method="post" autocomplete="off">
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="pin">Enter your 6-digit PIN:</label>
+              <input type="password" maxlength="6" minlength="6" pattern="\d{6}" class="form-control form-control-lg text-center" id="pin" name="pin" required autofocus>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block btn-lg mt-3">Sign In / Out</button>
+          </form>
+          <div id="keypad-result" class="mt-3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+// Simple AJAX for keypad sign-in
+const form = document.getElementById('keypad-form');
+const result = document.getElementById('keypad-result');
+if (form) {
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    result.innerHTML = '';
+    fetch(window.location.pathname.replace('/keypad/', '/s/') + 'resolve/', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: 'pin=' + encodeURIComponent(form.pin.value)
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) {
+        result.innerHTML = '<div class="alert alert-danger">' + data.error + '</div>';
+      } else {
+        // Confirm sign in/out
+        fetch(window.location.pathname.replace('/keypad/', '/s/') + 'confirm/', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: 'staff_id=' + data.staff_id + '&direction=' + data.suggested
+        })
+        .then(r2 => r2.json())
+        .then(data2 => {
+          if (data2.ok) {
+            result.innerHTML = '<div class="alert alert-success">' +
+              'Sign ' + (data.suggested === 'IN' ? 'in' : 'out') + ' successful at ' + (data2.at ? new Date(data2.at).toLocaleTimeString() : '') +
+              '</div>';
+            form.reset();
+          } else {
+            result.innerHTML = '<div class="alert alert-danger">' + (data2.error || 'Unknown error') + '</div>';
+          }
+        });
+      }
+    });
+  });
+}
+</script>
+{% endblock %}

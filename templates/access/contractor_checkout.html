@@ -1,0 +1,38 @@
+{% extends "sbadmin/public_base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4 text-center">Contractor Self Check-Out</h2>
+  {% if invalid_token %}
+    <div class="alert alert-danger text-center mb-4">
+      <strong>This sign-out link is invalid.</strong><br>
+      The token is not recognized. Please check your link or ask staff for assistance.
+    </div>
+    <div class="text-center mt-4">
+      <a href="{% url 'portal_public' token=token %}" class="btn btn-primary">Back to Portal</a>
+    </div>
+  {% elif already_signed_out %}
+    <div class="alert alert-info text-center mb-4">
+      <strong>You have already signed out.</strong><br>
+      This token has already been used, or you have already been marked as signed out.<br>
+      If you need to sign in again, please return to the portal or ask staff for assistance.
+    </div>
+    <div class="text-center mt-4">
+      <a href="{% url 'portal_public' token=token %}" class="btn btn-primary">Back to Portal</a>
+    </div>
+  {% elif success %}
+    <div class="alert alert-success">You have successfully signed out. Thank you for your work today!</div>
+    <div class="text-center mt-4">
+      <a href="{% url 'portal_public' token=token %}" class="btn btn-primary">Back to Portal</a>
+    </div>
+  {% else %}
+    <div class="card p-4 shadow-sm">
+      <h4 class="mb-3">Hello, <span class="text-primary font-weight-bold">{{ contractor.name }}</span>!</h4>
+      <p class="mb-4">When you are ready to leave, please sign out below. This helps us keep accurate records of who is on site.</p>
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger btn-block btn-lg">Sign Out</button>
+      </form>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

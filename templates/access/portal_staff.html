@@ -1,0 +1,590 @@
+{% extends "sbadmin/public_base_staff.html" %}
+{% block title %}Who's On Site — {{ site.name }}{% endblock %}
+
+{% block content %}
+<style>
+  .container-fluid { max-width: 1750px; }
+
+  @media (min-width: 1200px){
+    .assist-row { margin-left: -1rem; margin-right: -1rem; }
+    .assist-row > [class*="col-"] { padding-left: 1rem; padding-right: 1rem; }
+  }
+
+  /* SB Admin-ish */
+  .card { border:0; border-radius:.95rem; }
+  .card.shadow { box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.12) !important; }
+  .card-header { background:#fff; border-bottom:1px solid #e3e6f0; padding: 1rem 1.25rem; }
+  .card-body { padding: 1.25rem; }
+  .card-body.p-0 { padding: 0 !important; }
+  .card-footer { border-top:1px solid #e3e6f0; }
+
+  .page-kicker{ display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+  .page-left{ display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; }
+  .icon-badge{
+    width:42px; height:42px; border-radius:.75rem;
+    display:flex; align-items:center; justify-content:center;
+    background: rgba(78,115,223,.12);
+    color:#4e73df;
+  }
+
+  /* KPI cards */
+  .kpi-card { border-left:.25rem solid transparent; }
+  .kpi-top { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+  .kpi-label { font-weight:800; color:#5a5c69; display:flex; align-items:center; gap:.5rem; }
+  .kpi-value { font-weight:900; font-size: 1.5rem; color:#2e59d9; line-height:1; }
+  .kpi-sub { color:#858796; font-size:.85rem; margin-top:.35rem; }
+  .kpi-staff { border-left-color:#1cc88a; }
+  .kpi-assoc { border-left-color:#36b9cc; }
+  .kpi-vis   { border-left-color:#f6c23e; }
+  .kpi-cont  { border-left-color:#5a5c69; }
+
+  /* Badges */
+  .badge { border-radius:999px; }
+  .badge-soft{ font-weight:800; padding:.35rem .6rem; border:1px solid transparent; }
+  .badge-soft-success{ background: rgba(28,200,138,.12); color:#1cc88a; border-color: rgba(28,200,138,.18); }
+  .badge-soft-info{ background: rgba(54,185,204,.12); color:#36b9cc; border-color: rgba(54,185,204,.18); }
+  .badge-soft-warning{ background: rgba(246,194,62,.14); color:#b07a00; border-color: rgba(246,194,62,.22); }
+  .badge-soft-dark{ background: rgba(90,92,105,.10); color:#5a5c69; border-color: rgba(90,92,105,.18); }
+
+  /* Table */
+  .compact-table td, .compact-table th{
+    padding-top:.78rem !important;
+    padding-bottom:.78rem !important;
+    vertical-align:middle !important;
+  }
+  .table thead th { border-top:0; white-space:nowrap; }
+  .table-hover tbody tr:hover { background: rgba(78,115,223,.04); }
+
+  /* Header controls */
+  .header-controls{
+    display:flex;
+    align-items:center;
+    gap:.75rem;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+  .header-controls .btn-group .btn,
+  .header-controls .form-control-sm,
+  .header-controls .badge{
+    height:36px;
+    display:inline-flex;
+    align-items:center;
+    line-height:1.25;
+  }
+  .header-controls .btn-group .btn{ padding:0 .85rem; }
+
+  .search-wrap{
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+    border:1px solid #e3e6f0;
+    border-radius: .9rem;
+    padding:.25rem .45rem;
+    background:#fff;
+  }
+  .search-wrap .form-control-sm{
+    border:0;
+    box-shadow:none !important;
+    padding-left:.35rem;
+    width: 320px;
+    max-width: 100%;
+  }
+
+  @media (max-width: 576px){
+    .header-controls{ width:100%; justify-content:stretch; }
+    .header-controls .btn-group{ width:100%; }
+    .search-wrap{ width:100%; }
+    .search-wrap .form-control-sm{ width:100%; }
+  }
+
+  /* QR guidance banner */
+  .qr-hint{
+    border: 1px dashed rgba(78,115,223,.35);
+    background: rgba(78,115,223,.06);
+    border-radius: .95rem;
+    padding: .9rem 1rem;
+    color:#5a5c69;
+  }
+
+  /* Staff pills */
+  .staff-pill-wrap{
+    display:flex;
+    flex-wrap:wrap;
+    gap:.5rem;
+    padding: 1rem 1.25rem;
+  }
+  .staff-pill{
+    border:1px solid #e3e6f0;
+    border-radius: 999px;
+    padding:.45rem .75rem;
+    background:#fff;
+    font-weight:800;
+    color:#5a5c69;
+    display:inline-flex;
+    align-items:center;
+    gap:.5rem;
+    font-size:.9rem;
+  }
+  .staff-pill i{ color:#1cc88a; }
+
+  /* Force one-line title in non-staff header */
+  .one-line-title{ white-space:nowrap; }
+  .minw0{ min-width:0; }
+  .text-trunc{ overflow:hidden; text-overflow:ellipsis; }
+
+  /* Forms in modal */
+  .nav-pills .nav-link { border-radius:.85rem; font-weight:700; }
+  .nav-pills .nav-link.active { box-shadow:0 .1rem .6rem rgba(0,0,0,.12); }
+  .form-group label { font-weight:600; color:#5a5c69; }
+  .form-control { border-radius:.6rem; }
+  .form-control:focus { box-shadow: 0 0 0 .2rem rgba(78,115,223,.15); }
+
+  /* Modal */
+  .modal-content { border:0; border-radius: .95rem; }
+</style>
+
+<div class="container-fluid px-2 px-md-4 px-xl-5 py-4">
+
+  <!-- Header + CTA -->
+  <div class="page-kicker mb-3">
+    <div class="page-left">
+      <div class="icon-badge"><i class="fas fa-clipboard-check"></i></div>
+      <div>
+        <h1 class="h3 mb-0 text-gray-800">Who’s On Site</h1>
+        <div class="small text-muted">{{ site.name }} · Dashboard view (QR-first)</div>
+      </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2" style="display:flex; gap:.5rem; flex-wrap:wrap;">
+      <button type="button" class="btn btn-primary" id="openAssistBtn">
+        <i class="fas fa-plus mr-2"></i> Assisted entry
+      </button>
+      <span class="badge badge-light">
+        <i class="fas fa-qrcode mr-1"></i> Default: QR sign-in
+      </span>
+    </div>
+  </div>
+
+  {% if msg %}
+    <div class="alert alert-info shadow-sm d-flex align-items-center" role="alert">
+      <i class="fas fa-info-circle mr-2"></i>
+      <div>{{ msg }}</div>
+    </div>
+  {% endif %}
+
+  <!-- QR-first guidance -->
+  <div class="qr-hint mb-4 d-flex align-items-start" style="gap:.75rem;">
+    <div style="margin-top:.15rem;"><i class="fas fa-qrcode text-primary"></i></div>
+    <div>
+      <div class="font-weight-bold text-gray-800">Most people should use the QR code.</div>
+      <div class="small text-muted">
+        Use <strong>Assisted entry</strong> only when QR/portal access isn’t available (e.g., device issues, urgent access, accessibility needs).
+        Assisted actions are logged.
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI ROW -->
+  <div class="row assist-row mb-4">
+    <div class="col-12 col-md-6 col-xl-3 mb-3 mb-xl-0">
+      <div class="card shadow kpi-card kpi-staff">
+        <div class="card-body">
+          <div class="kpi-top">
+            <div class="kpi-label"><i class="fas fa-users text-success"></i> Staff</div>
+            <div class="kpi-value">{{ staff_in|length }}</div>
+          </div>
+          <div class="kpi-sub">Currently signed in</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3 mb-3 mb-xl-0">
+      <div class="card shadow kpi-card kpi-assoc">
+        <div class="card-body">
+          <div class="kpi-top">
+            <div class="kpi-label"><i class="fas fa-user-friends text-info"></i> Associates</div>
+            <div class="kpi-value">{{ associates|length }}</div>
+          </div>
+          <div class="kpi-sub">On site (non-staff)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3 mb-3 mb-xl-0">
+      <div class="card shadow kpi-card kpi-vis">
+        <div class="card-body">
+          <div class="kpi-top">
+            <div class="kpi-label"><i class="fas fa-id-badge text-warning"></i> Visitors</div>
+            <div class="kpi-value">{{ visitors_in|length }}</div>
+          </div>
+          <div class="kpi-sub">Signed in (list provided)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3">
+      <div class="card shadow kpi-card kpi-cont">
+        <div class="card-body">
+          <div class="kpi-top">
+            <div class="kpi-label"><i class="fas fa-hard-hat text-gray-600"></i> Contractors</div>
+            <div class="kpi-value">{{ contractors_in|length }}</div>
+          </div>
+          <div class="kpi-sub">Signed in (list provided)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN ROW: Staff list + non-staff table -->
+  <div class="row assist-row">
+
+    <!-- Staff list (pills) -->
+    <div class="col-12 col-xl-4 mb-4">
+      <div class="card shadow" style="border-left:.25rem solid #1cc88a;">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <div class="font-weight-bold text-success">
+            <i class="fas fa-users mr-2"></i>Staff in building
+          </div>
+          <span class="badge badge-soft badge-soft-success">{{ staff_in|length }}</span>
+        </div>
+
+        <div class="card-body p-0">
+          <div class="staff-pill-wrap">
+            {% for s in staff_in|dictsort:"name" %}
+              <span class="staff-pill"><i class="fas fa-user"></i> {{ s.name }}</span>
+            {% endfor %}
+            {% if not staff_in %}
+              <div class="text-muted w-100 text-center py-4">No staff currently signed in.</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="card-footer bg-white small text-muted d-flex justify-content-between">
+          <span>Alphabetical list</span>
+          <span><i class="fas fa-shield-alt mr-1"></i> Logged</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Non-staff on-site list (right) -->
+    <div class="col-12 col-xl-8 mb-4">
+      <div class="card shadow">
+
+        <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+          <div class="d-flex align-items-center mb-2 mb-md-0 minw0">
+            <span class="mr-2 text-primary"><i class="fas fa-clipboard-list"></i></span>
+            <div class="minw0">
+              <div class="font-weight-bold text-primary one-line-title text-trunc">
+                Visitors / Contractors / Associates
+              </div>
+              <div class="small text-muted">Currently on site (non-staff)</div>
+            </div>
+          </div>
+
+          <div class="header-controls">
+            <div class="btn-group btn-group-sm" role="group" aria-label="Type filter">
+              <button type="button" class="btn btn-outline-secondary js-typefilter active" data-type="all">
+                <i class="fas fa-layer-group mr-1"></i> All
+              </button>
+              <button type="button" class="btn btn-outline-secondary js-typefilter" data-type="associate">
+                <i class="fas fa-user-friends mr-1"></i> Associates
+              </button>
+              <button type="button" class="btn btn-outline-secondary js-typefilter" data-type="visitor">
+                <i class="fas fa-id-badge mr-1"></i> Visitors
+              </button>
+              <button type="button" class="btn btn-outline-secondary js-typefilter" data-type="contractor">
+                <i class="fas fa-hard-hat mr-1"></i> Contractors
+              </button>
+            </div>
+
+            <div class="search-wrap" title="Search">
+              <i class="fas fa-search text-gray-400 ml-2"></i>
+              <input type="text" class="form-control form-control-sm" id="searchInput" placeholder="Search name…">
+              <span class="badge badge-pill badge-light" id="visibleCount">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover compact-table mb-0" id="entityTable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Checked In</th>
+                  <th class="text-right pr-3">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for a in associates %}
+                  <tr data-name="{{ a.name|lower }}" data-type="associate">
+                    <td class="font-weight-bold text-gray-800">{{ a.name }}</td>
+                    <td>
+                      <span class="badge badge-soft badge-soft-info mr-1">Associate</span>
+                      <span class="badge badge-soft badge-soft-dark">{{ a.get_association_type_display }}</span>
+                    </td>
+                    <td>{{ a.signed_in_at|time:"H:i" }}</td>
+                    <td class="text-right pr-3">
+                      <button type="button" class="btn btn-danger btn-sm js-signout"
+                              data-entity-type="associate" data-entity-id="{{ a.id }}" data-entity-name="{{ a.name|escapejs }}">
+                        <i class="fas fa-sign-out-alt mr-1"></i> Sign out
+                      </button>
+                    </td>
+                  </tr>
+                {% endfor %}
+
+                {% for v in visitors %}
+                  {% if v.signed_in_at and not v.signed_out_at %}
+                    <tr data-name="{{ v.name|lower }}" data-type="visitor">
+                      <td class="font-weight-bold text-gray-800">{{ v.name }}</td>
+                      <td><span class="badge badge-soft badge-soft-warning">Visitor</span></td>
+                      <td>{{ v.signed_in_at|time:"H:i" }}</td>
+                      <td class="text-right pr-3">
+                        <button type="button" class="btn btn-danger btn-sm js-signout"
+                                data-entity-type="visitor" data-entity-id="{{ v.id }}" data-entity-name="{{ v.name|escapejs }}">
+                          <i class="fas fa-sign-out-alt mr-1"></i> Sign out
+                        </button>
+                      </td>
+                    </tr>
+                  {% endif %}
+                {% endfor %}
+
+                {% for c in contractors %}
+                  {% if c.signed_in_at and not c.signed_out_at %}
+                    <tr data-name="{{ c.name|lower }}" data-type="contractor">
+                      <td class="font-weight-bold text-gray-800">{{ c.name }}</td>
+                      <td><span class="badge badge-soft badge-soft-dark">Contractor</span></td>
+                      <td>{{ c.signed_in_at|time:"H:i" }}</td>
+                      <td class="text-right pr-3">
+                        <button type="button" class="btn btn-danger btn-sm js-signout"
+                                data-entity-type="contractor" data-entity-id="{{ c.id }}" data-entity-name="{{ c.name|escapejs }}">
+                          <i class="fas fa-sign-out-alt mr-1"></i> Sign out
+                        </button>
+                      </td>
+                    </tr>
+                  {% endif %}
+                {% endfor %}
+
+                {% if not associates and not visitors_in and not contractors_in %}
+                  <tr><td colspan="4" class="text-muted text-center">No non-staff currently signed in.</td></tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+
+          <div id="emptyState" class="text-center text-muted py-5" style="display:none;">
+            <div class="mb-2"><i class="fas fa-check-circle fa-2x text-gray-300"></i></div>
+            Nobody is currently signed in.
+          </div>
+        </div>
+
+        <div class="card-footer bg-white small text-muted d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+          <span class="mb-2 mb-md-0"><i class="fas fa-lightbulb mr-1"></i>Tip: filter by type, then search to find someone fast.</span>
+          <span><i class="fas fa-clipboard-check mr-1"></i>Assisted actions are logged.</span>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Hidden sign-out form -->
+<form method="post" id="signOutForm">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="sign_out">
+  <input type="hidden" name="entity_type" id="signOutEntityType">
+  <input type="hidden" name="entity_id" id="signOutEntityId">
+</form>
+
+<!-- Sign-out confirm modal -->
+<div class="modal fade" id="signOutModal" tabindex="-1" role="dialog" aria-labelledby="signOutModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="signOutModalLabel">
+          <i class="fas fa-sign-out-alt mr-2 text-danger"></i>Confirm sign out
+        </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Sign out <strong id="signOutName">this person</strong>?
+        <div class="small text-muted mt-2">This will record the sign-out time immediately.</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger btn-sm" id="confirmSignOutBtn">
+          <i class="fas fa-sign-out-alt mr-1"></i> Sign out
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Assisted entry modal (QR fallback) -->
+<div class="modal fade" id="assistModal" tabindex="-1" role="dialog" aria-labelledby="assistModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="assistModalLabel">
+          <i class="fas fa-user-plus mr-2 text-primary"></i>Assisted entry
+        </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="alert alert-light border d-flex align-items-start mb-3" style="gap:.75rem;">
+          <i class="fas fa-qrcode text-primary mt-1"></i>
+          <div class="small text-muted mb-0">
+            QR/portal sign-in is preferred. Use assisted entry only when needed. All assisted actions are logged.
+          </div>
+        </div>
+
+        <ul class="nav nav-pills nav-fill mb-3" role="tablist">
+          <li class="nav-item">
+            <a class="nav-link active" data-toggle="pill" href="#assist-visitor" role="tab">
+              <i class="fas fa-id-badge mr-1"></i> Visitor
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-toggle="pill" href="#assist-contractor" role="tab">
+              <i class="fas fa-hard-hat mr-1"></i> Contractor
+            </a>
+          </li>
+        </ul>
+
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="assist-visitor" role="tabpanel">
+            <form method="post" novalidate>
+              {% csrf_token %}
+              <input type="hidden" name="action" value="add_visitor">
+              {% for field in visitor_form %}
+                <div class="form-group">
+                  <label for="{{ field.id_for_label }}" class="mb-1">
+                    {{ field.label }}
+                    {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                  </label>
+                  {{ field }}
+                  {% if field.help_text %}<small class="form-text text-muted">{{ field.help_text }}</small>{% endif %}
+                  {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+              {% endfor %}
+              {% if visitor_form.non_field_errors %}
+                <div class="alert alert-danger">
+                  {% for error in visitor_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                </div>
+              {% endif %}
+              <button class="btn btn-success btn-block">
+                <i class="fas fa-sign-in-alt mr-1"></i> Sign in visitor
+              </button>
+            </form>
+          </div>
+
+          <div class="tab-pane fade" id="assist-contractor" role="tabpanel">
+            <form method="post" novalidate>
+              {% csrf_token %}
+              <input type="hidden" name="action" value="add_contractor">
+              {% for field in contractor_form %}
+                <div class="form-group">
+                  <label for="{{ field.id_for_label }}" class="mb-1">
+                    {{ field.label }}
+                    {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                  </label>
+                  {{ field }}
+                  {% if field.help_text %}<small class="form-text text-muted">{{ field.help_text }}</small>{% endif %}
+                  {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+              {% endfor %}
+              {% if contractor_form.non_field_errors %}
+                <div class="alert alert-danger">
+                  {% for error in contractor_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                </div>
+              {% endif %}
+              <button class="btn btn-success btn-block">
+                <i class="fas fa-sign-in-alt mr-1"></i> Sign in contractor
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // Ensure form controls look consistent
+  document.querySelectorAll('input, select, textarea').forEach(function(el){
+    if (el.type === 'hidden' || el.type === 'checkbox' || el.type === 'radio') return;
+    if (!el.classList.contains('form-control')) el.classList.add('form-control');
+  });
+
+  // Assisted entry modal
+  var openAssistBtn = document.getElementById('openAssistBtn');
+  if (openAssistBtn) openAssistBtn.addEventListener('click', function(){ $('#assistModal').modal('show'); });
+
+  // Table filtering
+  var table = document.getElementById('entityTable');
+  var search = document.getElementById('searchInput');
+  var emptyState = document.getElementById('emptyState');
+  var visibleCount = document.getElementById('visibleCount');
+  var typeFilter = 'all';
+
+  function updateCounts() {
+    if (!table) return;
+    var rows = Array.from(table.tBodies[0].rows);
+    var visible = rows.filter(function(r){ return r.style.display !== 'none'; }).length;
+    if (visibleCount) visibleCount.textContent = visible;
+    if (emptyState) emptyState.style.display = (rows.length === 0 || visible === 0) ? '' : 'none';
+  }
+
+  function applyFilters() {
+    if (!table) return;
+    var q = (search ? (search.value || '').toLowerCase().trim() : '');
+    Array.from(table.tBodies[0].rows).forEach(function(row){
+      var name = (row.getAttribute('data-name') || '');
+      var rtype = (row.getAttribute('data-type') || '');
+      var matchesType = (typeFilter === 'all') || (rtype === typeFilter);
+      var matchesSearch = (!q) || (name.indexOf(q) !== -1) || ((row.innerText||'').toLowerCase().indexOf(q) !== -1);
+      row.style.display = (matchesType && matchesSearch) ? '' : 'none';
+    });
+    updateCounts();
+  }
+
+  if (search) search.addEventListener('input', applyFilters);
+
+  document.querySelectorAll('.js-typefilter').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.js-typefilter').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      typeFilter = btn.getAttribute('data-type') || 'all';
+      applyFilters();
+    });
+  });
+
+  // Sign-out modal wiring
+  document.querySelectorAll('.js-signout').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.getElementById('signOutEntityType').value = btn.getAttribute('data-entity-type');
+      document.getElementById('signOutEntityId').value = btn.getAttribute('data-entity-id');
+      document.getElementById('signOutName').textContent = btn.getAttribute('data-entity-name') || 'this person';
+      $('#signOutModal').modal('show');
+    });
+  });
+
+  var confirmBtn = document.getElementById('confirmSignOutBtn');
+  if (confirmBtn) confirmBtn.addEventListener('click', function(){ document.getElementById('signOutForm').submit(); });
+
+  applyFilters();
+})();
+</script>
+{% endblock %}

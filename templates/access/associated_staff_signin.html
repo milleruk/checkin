@@ -1,0 +1,43 @@
+{% extends "sbadmin/public_base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-sm-10 col-md-8 col-lg-6">
+      <h2 class="mb-4 text-center font-weight-bold" style="font-size:1.5em;">Associated Staff Sign-In for {{ site.name }}</h2>
+      {% if success or already_signed_in %}
+        <div class="alert alert-success text-center mb-4">Thank you for signing in! Your attendance has been recorded.</div>
+        <div class="text-center mt-4">
+          <a href="{% url 'portal_public' token=token %}" class="btn btn-primary mb-2 btn-block">Back to Portal</a>
+        </div>
+      {% elif signed_out %}
+        <div class="alert alert-info text-center mb-4">
+          <strong>You have already signed out.</strong><br>
+          Thank you! If you need to sign in again, please return to the portal or ask staff for assistance.
+        </div>
+        <div class="text-center mt-4">
+          <a href="{% url 'portal_public' token=token %}" class="btn btn-primary btn-block">Back to Portal</a>
+        </div>
+      {% else %}
+        <div class="text-center mb-3">
+          <a href="{% url 'portal_public' token=token %}" class="btn btn-primary btn-block">Back to Portal</a>
+        </div>
+        <form method="post" novalidate class="bg-white p-3 p-md-4 rounded shadow-sm">
+          {% csrf_token %}
+          {% load crispy_forms_tags %}
+          {{ form.non_field_errors }}
+          {% if site.confidentiality_terms %}
+            <div class="alert alert-info small mb-2">
+              <strong>Confidentiality Terms:</strong><br>
+              {{ site.confidentiality_terms|safe }}
+            </div>
+          {% endif %}
+          <div class="mb-2">
+            {{ form|crispy }}
+          </div>
+          <button type="submit" class="btn btn-success btn-block mt-3">Sign In</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

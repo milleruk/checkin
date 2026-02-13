@@ -1,0 +1,256 @@
+{% extends "sbadmin/base.html" %}
+{% block title %}Staff{% endblock %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="h3 mb-0 text-gray-800">Staff</h1>
+    <div class="small text-muted">{{ site.name }}</div>
+  </div>
+</div>
+
+<div class="row">
+  <!-- LEFT: Actions -->
+  <div class="col-lg-5 mb-4">
+    <div class="card shadow">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-user-cog fa-lg text-primary mr-2"></i>
+          <h6 class="m-0 font-weight-bold text-primary">Staff Management</h6>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <!-- Tabs -->
+        <ul class="nav nav-pills mb-3" id="staffTabs" role="tablist">
+          <li class="nav-item">
+            <a class="nav-link active" id="add-staff-tab" data-toggle="pill" href="#add-staff" role="tab">
+              <i class="fas fa-user-plus mr-1"></i> Add Staff
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="add-manager-tab" data-toggle="pill" href="#add-manager" role="tab">
+              <i class="fas fa-user-shield mr-1"></i> Add Manager
+            </a>
+          </li>
+        </ul>
+
+        <div class="tab-content" id="staffTabsContent">
+          <!-- ADD STAFF -->
+          <div class="tab-pane fade show active" id="add-staff" role="tabpanel">
+            <form method="post" class="mb-0">
+              {% csrf_token %}
+
+              <div class="form-group">
+                <label class="mb-1">Name</label>
+                <input class="form-control form-control-sm" name="name" value="{{ form.name.value|default:'' }}" required>
+                {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>{% endif %}
+              </div>
+
+              <div class="form-group">
+                <label class="mb-1">PIN</label>
+                <div class="input-group">
+                  <input class="form-control form-control-sm" id="pinInputAdd" name="pin"
+                         maxlength="6" minlength="6" inputmode="numeric" required
+                         value="{{ form.pin.value|default:'' }}">
+                  <div class="input-group-append">
+                    <button class="btn btn-outline-secondary btn-sm" type="button" id="genPinBtnAdd">
+                      <i class="fas fa-dice mr-1"></i> Random
+                    </button>
+                  </div>
+                </div>
+                <small class="form-text text-muted">6 digits. You can generate one, or set your own.</small>
+                {% if form.pin.errors %}<div class="text-danger small mt-1">{{ form.pin.errors.0 }}</div>{% endif %}
+              </div>
+
+              <div class="custom-control custom-switch mb-3">
+                <input type="checkbox" class="custom-control-input" id="is_active" name="is_active"
+                       {% if form.is_active.value or form.is_active.value is none %}checked{% endif %}>
+                <label class="custom-control-label" for="is_active">Active</label>
+              </div>
+
+              <button class="btn btn-primary btn-block btn-sm">
+                <i class="fas fa-plus mr-1"></i> Add Staff Member
+              </button>
+            </form>
+          </div>
+
+          <!-- ADD MANAGER -->
+          <div class="tab-pane fade" id="add-manager" role="tabpanel">
+            <form method="post" class="mb-3">
+              {% csrf_token %}
+              <input type="hidden" name="invite_manager" value="1">
+              <input type="hidden" name="site" value="{{ site.id }}">
+
+              <div class="form-group">
+                {{ invite_form.email.label_tag }}
+                {{ invite_form.email }}
+                {% if invite_form.email.errors %}<div class="text-danger small mt-1">{{ invite_form.email.errors.0 }}</div>{% endif %}
+              </div>
+
+              <div class="form-group">
+                <label class="mb-1" for="manager_password">Password</label>
+                <div class="input-group">
+                  <input type="text" class="form-control form-control-sm" id="managerPasswordInput"
+                         name="password" autocomplete="new-password">
+                  <div class="input-group-append">
+                    <button class="btn btn-outline-secondary btn-sm" type="button" id="genManagerPasswordBtn">
+                      <i class="fas fa-key mr-1"></i> Generate
+                    </button>
+                  </div>
+                </div>
+                <small class="form-text text-muted">Leave blank to auto-generate, or click Generate.</small>
+              </div>
+
+              <button class="btn btn-info btn-block btn-sm">
+                <i class="fas fa-paper-plane mr-1"></i> Add / Invite Manager
+              </button>
+
+              {% if invite_success %}
+                <div class="alert alert-success mt-3 mb-0">{{ invite_success }}</div>
+              {% endif %}
+              {% if invite_error %}
+                <div class="alert alert-danger mt-3 mb-0">{{ invite_error }}</div>
+              {% endif %}
+            </form>
+
+            <div class="border-top pt-3">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <strong>Current Site Managers</strong>
+                <span class="badge badge-light">{{ site_managers|length }}</span>
+              </div>
+              <ul class="list-unstyled mb-0">
+                {% for manager in site_managers %}
+                  <li class="small">
+                    <i class="fas fa-user-shield text-info mr-1"></i> {{ manager.user.email }}
+                  </li>
+                {% empty %}
+                  <li class="text-muted small">No managers assigned yet.</li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Staff List -->
+  <div class="col-lg-7 mb-4">
+    <div class="card shadow">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-users fa-lg text-primary mr-2"></i>
+          <h6 class="m-0 font-weight-bold text-primary">Staff List</h6>
+          <span class="badge badge-pill badge-light ml-2">{{ staff|length }}</span>
+        </div>
+        <div style="min-width: 240px;">
+          <input type="text" id="staffFilter" class="form-control form-control-sm" placeholder="Search name or PIN…">
+        </div>
+      </div>
+
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover table-sm mb-0" id="staffTable">
+            <thead class="thead-light">
+              <tr>
+                <th class="pl-3">Name</th>
+                <th>PIN</th>
+                <th>Active</th>
+                <th class="text-right pr-3">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in staff %}
+                <tr>
+                  <td class="pl-3">
+                    <a href="{% url 'manager_staff_detail' site.id s.id %}">{{ s.name }}</a>
+                    <div class="small text-muted">ID: {{ s.id }}</div>
+                  </td>
+                  <td><code class="mb-0">{{ s.pin_value }}</code></td>
+                  <td>
+                    {% if s.is_active %}
+                      <span class="badge badge-success">Active</span>
+                    {% else %}
+                      <span class="badge badge-secondary">Inactive</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-right pr-3">
+                    <form method="post" action="{% url 'manager_staff_detail' site.id s.id %}" class="d-inline">
+                      {% csrf_token %}
+                      <button name="toggle_active" value="1"
+                              class="btn btn-sm {% if s.is_active %}btn-outline-secondary{% else %}btn-outline-success{% endif %}">
+                        {% if s.is_active %}
+                          <i class="fas fa-user-slash mr-1"></i> Deactivate
+                        {% else %}
+                          <i class="fas fa-user-check mr-1"></i> Activate
+                        {% endif %}
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="text-center text-muted py-4">No staff added yet.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div id="noStaffResults" class="text-center text-muted py-4" style="display:none;">
+          No matching staff found.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // Staff PIN generator
+  var genPinBtn = document.getElementById('genPinBtnAdd');
+  if (genPinBtn) {
+    genPinBtn.onclick = function() {
+      var pin = '' + Math.floor(100000 + Math.random() * 900000);
+      document.getElementById('pinInputAdd').value = pin;
+    };
+  }
+
+  // Manager password generator
+  var genPassBtn = document.getElementById('genManagerPasswordBtn');
+  if (genPassBtn) {
+    genPassBtn.onclick = function() {
+      var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$';
+      var pass = '';
+      for (var i = 0; i < 12; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
+      document.getElementById('managerPasswordInput').value = pass;
+    };
+  }
+
+  // Staff table filter + "no results"
+  var filterInput = document.getElementById('staffFilter');
+  var table = document.getElementById('staffTable');
+  var noResults = document.getElementById('noStaffResults');
+
+  if (filterInput && table) {
+    filterInput.addEventListener('input', function() {
+      var filter = this.value.toLowerCase().trim();
+      var rows = table.querySelectorAll('tbody tr');
+      var visible = 0;
+
+      rows.forEach(function(row) {
+        var name = (row.cells[0].innerText || '').toLowerCase();
+        var pin = (row.cells[1].innerText || '').toLowerCase();
+        var match = !filter || name.indexOf(filter) !== -1 || pin.indexOf(filter) !== -1;
+        row.style.display = match ? '' : 'none';
+        if (match) visible++;
+      });
+
+      if (noResults) noResults.style.display = (visible === 0 && rows.length > 0) ? '' : 'none';
+    });
+  }
+})();
+</script>
+{% endblock %}
+

@@ -1,0 +1,283 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Log in</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/4.1.4/css/sb-admin-2.min.css">
+
+<style>
+html, body { overflow-x: hidden; }
+
+body{
+  min-height:100vh;
+  position: relative;
+  background: linear-gradient(135deg, #1f6ed4, #1cb4d3);
+}
+
+/* Animated background (subtle) */
+body::before{
+  content:"";
+  position: fixed;
+  inset: -20%;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.20), transparent 55%),
+    radial-gradient(circle at 80% 30%, rgba(255,255,255,0.12), transparent 55%),
+    radial-gradient(circle at 40% 80%, rgba(0,0,0,0.10), transparent 60%),
+    linear-gradient(135deg, #1f6ed4, #1cb4d3);
+  filter: saturate(1.05);
+  z-index: -2;
+  animation: bgDrift 18s ease-in-out infinite alternate;
+}
+
+/* Very light film grain for depth */
+body::after{
+  content:"";
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.10'/%3E%3C/svg%3E");
+  opacity: .06;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes bgDrift{
+  0%   { transform: translate3d(-1.5%, -1%, 0) scale(1.02); }
+  50%  { transform: translate3d( 1.0%,  1%, 0) scale(1.03); }
+  100% { transform: translate3d( 2.0%, -1%, 0) scale(1.02); }
+}
+
+/* Container wrapper */
+.shell{
+  max-width: 1150px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+/* Header */
+.topbar-public{
+  background: rgba(255,255,255,0.94);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  backdrop-filter: blur(8px);
+}
+
+/* Status badge */
+.status-badge{
+  display:inline-flex;
+  align-items:center;
+  background: rgba(40,167,69,0.12);
+  color:#1f7a35;
+  padding:.35rem .7rem;
+  border-radius:999px;
+  font-size:.8rem;
+  font-weight:600;
+  border: 1px solid rgba(40,167,69,0.22);
+}
+
+/* Pulse dot */
+.status-dot{
+  width:9px; height:9px;
+  border-radius:50%;
+  background:#28a745;
+  margin-right:8px;
+  position: relative;
+}
+.status-dot::after{
+  content:"";
+  position:absolute;
+  inset:-7px;
+  border-radius:50%;
+  border: 2px solid rgba(40,167,69,0.35);
+  animation: pulse 2.2s ease-out infinite;
+}
+
+@keyframes pulse{
+  0%   { transform: scale(.55); opacity: .75; }
+  70%  { transform: scale(1.25); opacity: 0; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+
+/* Login card */
+.glass-card{
+  background: rgba(255,255,255,0.98);
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.05);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.15);
+  animation: cardFloat 6s ease-in-out infinite;
+  transform: translateZ(0);
+}
+
+@keyframes cardFloat{
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
+}
+
+/* Hero */
+.hero{ color: rgba(255,255,255,0.95); }
+.hero h1{ letter-spacing: -0.02em; }
+
+/* Pills */
+.mini-pill{
+  display:inline-flex;
+  align-items:center;
+  padding:.35rem .7rem;
+  border-radius:999px;
+  background: rgba(255,255,255,0.15);
+  font-size:.85rem;
+  margin-bottom:.5rem;
+  margin-right:.5rem;
+}
+
+/* Button micro-interaction */
+.btn-user{
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.btn-user:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(78,115,223,0.18);
+}
+.btn-user:active{
+  transform: translateY(0px);
+  box-shadow: none;
+}
+
+/* Footer */
+.public-footer{
+  background: rgba(255,255,255,0.92);
+  border-top: 1px solid rgba(0,0,0,0.06);
+  padding: 1.2rem 0;
+  margin-top: 2rem;
+  backdrop-filter: blur(8px);
+}
+.public-footer a{ color:#4e73df; text-decoration:none; }
+.public-footer a:hover{ text-decoration:underline; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce){
+  body::before, .glass-card, .status-dot::after { animation: none !important; }
+}
+
+</style>
+</head>
+
+<body class="d-flex flex-column">
+
+<header class="topbar-public py-2">
+  <div class="shell d-flex justify-content-between align-items-center">
+
+    <div class="d-flex align-items-center">
+      <img src="{% static 'img/logo.png' %}" style="height:42px;" alt="Logo">
+      <div class="ml-2">
+        <div class="font-weight-bold text-primary">Check In / Out</div>
+        <div class="small text-muted">Management portal</div>
+      </div>
+    </div>
+
+    <div class="d-none d-md-flex align-items-center">
+      <span class="status-badge mr-3">
+        <span class="status-dot"></span>
+        All Systems Operational
+      </span>
+
+      <span class="small text-muted">
+        <i class="fas fa-lock mr-1"></i> Authorised users only
+      </span>
+    </div>
+
+  </div>
+</header>
+
+<main class="flex-grow-1">
+  <div class="shell py-4 py-lg-5">
+    <div class="row align-items-center">
+
+      <div class="col-lg-6 hero mb-4 mb-lg-0">
+        <h1 class="display-4 font-weight-bold mb-3">Welcome 👋</h1>
+        <p class="lead mb-4" style="max-width:34rem;">
+          Real-time staff, visitor and contractor attendance with audit trails, QR check-in and secure management dashboards.
+        </p>
+
+        <div>
+          <span class="mini-pill"><i class="fas fa-users mr-2"></i>Live Attendance</span>
+          <span class="mini-pill"><i class="fas fa-history mr-2"></i>Audit Logs</span>
+          <span class="mini-pill"><i class="fas fa-qrcode mr-2"></i>QR Access</span>
+          <span class="mini-pill"><i class="fas fa-user-shield mr-2"></i>Manager Controls</span>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="glass-card p-4 p-md-5">
+
+          <div class="text-center mb-4">
+            <div class="h4 text-primary font-weight-bold">Sign in</div>
+            <div class="small text-muted">Use your authorised account</div>
+          </div>
+
+          <form method="post">
+            {% csrf_token %}
+            {% if form.errors %}
+              <div class="alert alert-danger">Invalid login credentials</div>
+            {% endif %}
+
+            <div class="form-group">
+              <label class="small text-muted">Email</label>
+              <input type="email" name="username" class="form-control form-control-user"
+                     placeholder="email@organisation" required>
+            </div>
+
+            <div class="form-group">
+              <label class="small text-muted">Password</label>
+              <input type="password" name="password" class="form-control form-control-user"
+                     placeholder="••••••••" required>
+            </div>
+
+            <button class="btn btn-primary btn-user btn-block" type="submit">Log in</button>
+          </form>
+
+          <div class="d-flex justify-content-between mt-3">
+            <a href="#" class="small">Forgot password?</a>
+            <span class="small text-muted"><i class="fas fa-lock mr-1"></i>Secure</span>
+          </div>
+
+          <hr>
+
+          <div class="small text-muted text-center">
+            Support: <a href="mailto:support@haresign.net">support@haresign.net</a>
+            <span class="mx-2">&bull;</span> v1.0.0
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<footer class="public-footer">
+  <div class="shell">
+    <div class="row align-items-center">
+      <div class="col-md-6 text-center text-md-left mb-2 mb-md-0">
+        <div class="font-weight-bold">Check In / Out System</div>
+        <div class="small text-muted">&copy; {{ now|date:"Y" }} — v1.0.0</div>
+      </div>
+      <div class="col-md-6 text-center text-md-right small">
+        Developed by <strong>Haresign Consulting</strong>
+        <span class="mx-2">&bull;</span>
+        <a href="mailto:support@haresign.net">support@haresign.net</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/4.1.4/js/sb-admin-2.min.js"></script>
+
+</body>
+</html>

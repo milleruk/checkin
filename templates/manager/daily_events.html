@@ -1,0 +1,273 @@
+{% extends 'sbadmin/base.html' %}
+{% block content %}
+<div class="container-fluid">
+
+  <!-- Header -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h1 class="h3 mb-0 text-gray-800">Daily Attendance</h1>
+      <div class="small text-muted">{{ site.name }}</div>
+    </div>
+  </div>
+
+  <!-- Date controls -->
+  <div class="card shadow mb-4">
+    <div class="card-body py-3">
+      <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between">
+
+        <div class="mb-2 mb-md-0">
+          <div class="text-gray-800 font-weight-bold">
+            {{ date|date:"l, j M Y" }}
+          </div>
+          <div class="small text-muted">Pick a date to review staff presence and event history.</div>
+        </div>
+
+        <div class="d-flex align-items-center">
+          <a class="btn btn-sm btn-outline-secondary mr-2" href="?date={{ prev_date|date:'Y-m-d' }}">
+            <i class="fas fa-chevron-left mr-1"></i> Prev
+          </a>
+          <a class="btn btn-sm btn-outline-secondary mr-3" href="?date={{ today|date:'Y-m-d' }}">
+            <i class="fas fa-dot-circle mr-1"></i> Today
+          </a>
+
+          <form method="get" class="form-inline mb-0">
+            <label for="date" class="small text-gray-600 mr-2 mb-0">Date</label>
+            <input type="date" id="date" name="date" class="form-control form-control-sm mr-2"
+                   value="{{ date|date:'Y-m-d' }}">
+            <button type="submit" class="btn btn-sm btn-primary">
+              <i class="fas fa-search mr-1"></i> Go
+            </button>
+          </form>
+
+          {% if not is_today %}
+            <a class="btn btn-sm btn-outline-secondary ml-3" href="?date={{ next_date|date:'Y-m-d' }}">
+              Next <i class="fas fa-chevron-right ml-1"></i>
+            </a>
+          {% else %}
+            <a class="btn btn-sm btn-outline-secondary ml-3 disabled" href="#" tabindex="-1" aria-disabled="true">
+              Next <i class="fas fa-chevron-right ml-1"></i>
+            </a>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="row">
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-info shadow h-100">
+        <div class="card-body py-3">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Staff Seen</div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ staff_in|length }}</div>
+            </div>
+            <i class="fas fa-users fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-warning shadow h-100">
+        <div class="card-body py-3">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Events</div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ events|length }}</div>
+            </div>
+            <i class="fas fa-list fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# optional if you have it - safe to remove #}
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-danger shadow h-100">
+        <div class="card-body py-3">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Auto outs</div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ auto_outs|default:0 }}</div>
+            </div>
+            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# optional - safe to remove #}
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-primary shadow h-100">
+        <div class="card-body py-3">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Events</div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ events|length }}</div>
+            </div>
+            <i class="fas fa-list fa-2x text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Staff chips -->
+  <div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center">
+        <i class="fas fa-id-badge text-primary mr-2"></i>
+        <h6 class="m-0 font-weight-bold text-primary">Staff Seen</h6>
+        <span class="badge badge-light ml-2">{{ staff_in|length }}</span>
+      </div>
+      <input type="text" id="staffChipFilter" class="form-control form-control-sm"
+             style="max-width:220px;" placeholder="Search staff…">
+    </div>
+    <div class="card-body">
+      {% if staff_in %}
+        <div class="d-flex flex-wrap" id="staffChips">
+          {% for staff in staff_in %}
+            <a href="{% url 'manager_staff_detail' site.id staff.id %}"
+               class="badge badge-primary m-1 p-2"
+               style="font-size:0.95rem;"
+               data-staff-name="{{ staff.name|lower }}">
+              <i class="fas fa-user mr-1"></i>{{ staff.name }}
+            </a>
+          {% endfor %}
+        </div>
+        <div id="noStaffChipResults" class="text-muted mt-2" style="display:none;">No matching staff.</div>
+      {% else %}
+        <div class="text-muted">No staff checked in this day.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Events -->
+  <div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center">
+        <i class="fas fa-history text-primary mr-2"></i>
+        <h6 class="m-0 font-weight-bold text-primary">All Events</h6>
+        <span class="badge badge-light ml-2">{{ events|length }}</span>
+      </div>
+
+      <div class="d-flex align-items-center">
+        <input type="text" id="eventsFilter" class="form-control form-control-sm mr-2"
+               style="max-width:220px;" placeholder="Search…">
+        <div class="custom-control custom-switch">
+          <input type="checkbox" class="custom-control-input" id="autoOnlyToggle">
+          <label class="custom-control-label small text-gray-600" for="autoOnlyToggle">Auto only</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0" id="eventsTable">
+          <thead class="thead-light">
+            <tr>
+              <th class="pl-3">Time</th>
+              <th>Staff</th>
+              <th>Direction</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for event in events %}
+              <tr data-auto="{% if event.auto_clockout %}1{% else %}0{% endif %}">
+                <td class="pl-3">{{ event.occurred_at|date:'H:i:s' }}</td>
+                <td>
+                  {% if event.staff.id %}
+                    <a href="{% url 'manager_staff_detail' site.id event.staff.id %}">{{ event.staff.name }}</a>
+                  {% else %}
+                    {{ event.staff.name }}
+                  {% endif %}
+                </td>
+                <td>
+                  {% if event.get_direction_display|lower == "in" %}
+                    <span class="badge badge-success">IN</span>
+                  {% elif event.get_direction_display|lower == "out" %}
+                    <span class="badge badge-secondary">OUT</span>
+                  {% else %}
+                    <span class="badge badge-light">{{ event.get_direction_display }}</span>
+                  {% endif %}
+                  {% if event.auto_clockout %}
+                    <span class="badge badge-warning ml-2" title="Auto clock-out by system">auto</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="3" class="text-muted py-4 text-center">No events for this day.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div id="noEventResults" class="text-center text-muted py-4" style="display:none;">
+        No matching events.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  // Staff chip filter
+  var staffInput = document.getElementById('staffChipFilter');
+  var chipsWrap = document.getElementById('staffChips');
+  var noStaff = document.getElementById('noStaffChipResults');
+
+  function filterChips() {
+    if (!staffInput || !chipsWrap) return;
+    var q = (staffInput.value || '').toLowerCase().trim();
+    var chips = chipsWrap.querySelectorAll('a[data-staff-name]');
+    var visible = 0;
+
+    chips.forEach(function(chip){
+      var name = chip.getAttribute('data-staff-name') || '';
+      var show = (!q) || name.indexOf(q) !== -1;
+      chip.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    if (noStaff) noStaff.style.display = (chips.length > 0 && visible === 0) ? '' : 'none';
+  }
+  if (staffInput) staffInput.addEventListener('input', filterChips);
+
+  // Event filters (search + auto only)
+  var eventsFilter = document.getElementById('eventsFilter');
+  var autoOnly = document.getElementById('autoOnlyToggle');
+  var table = document.getElementById('eventsTable');
+  var noEvent = document.getElementById('noEventResults');
+
+  function filterEvents() {
+    if (!table) return;
+    var q = (eventsFilter && eventsFilter.value ? eventsFilter.value : '').toLowerCase().trim();
+    var autoOnlyOn = autoOnly && autoOnly.checked;
+
+    var rows = table.querySelectorAll('tbody tr');
+    var visible = 0;
+
+    rows.forEach(function(row){
+      var text = (row.innerText || '').toLowerCase();
+      var isAuto = row.getAttribute('data-auto') === '1';
+
+      var matchText = (!q) || text.indexOf(q) !== -1;
+      var matchAuto = (!autoOnlyOn) || isAuto;
+
+      var show = matchText && matchAuto;
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    if (noEvent) noEvent.style.display = (rows.length > 0 && visible === 0) ? '' : 'none';
+  }
+
+  if (eventsFilter) eventsFilter.addEventListener('input', filterEvents);
+  if (autoOnly) autoOnly.addEventListener('change', filterEvents);
+})();
+</script>
+{% endblock %}

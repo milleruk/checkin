@@ -1,0 +1,221 @@
+{% extends "sbadmin/base.html" %}
+{% block title %}Superuser Admin{% endblock %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="h3 mb-0 text-gray-800">Superuser Admin</h1>
+    <div class="small text-muted">Create sites, create users, and assign managers.</div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-xl-8 mb-4">
+    <div class="card shadow">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-tools text-primary mr-2"></i>
+          <h6 class="m-0 font-weight-bold text-primary">Admin Actions</h6>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <ul class="nav nav-pills mb-3" id="adminTabs" role="tablist">
+          <li class="nav-item">
+            <a class="nav-link active" id="site-tab" data-toggle="pill" href="#site-pane" role="tab">
+              <i class="fas fa-building mr-1"></i> Create Site
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="user-tab" data-toggle="pill" href="#user-pane" role="tab">
+              <i class="fas fa-user-plus mr-1"></i> Create User
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="assign-tab" data-toggle="pill" href="#assign-pane" role="tab">
+              <i class="fas fa-user-shield mr-1"></i> Assign Manager
+            </a>
+          </li>
+        </ul>
+
+        <div class="tab-content" id="adminTabsContent">
+          <!-- Create Site -->
+          <div class="tab-pane fade show active" id="site-pane" role="tabpanel">
+            <form method="post" class="mb-0" novalidate>
+              {% csrf_token %}
+              <input type="hidden" name="create_site" value="1">
+
+              {% for field in site_form %}
+                <div class="form-group">
+                  <label for="{{ field.id_for_label }}" class="mb-1">
+                    {{ field.label }}
+                    {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                  </label>
+                  {{ field }}
+                  {% if field.help_text %}<small class="form-text text-muted">{{ field.help_text }}</small>{% endif %}
+                  {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+              {% endfor %}
+
+              {% if site_form.non_field_errors %}
+                <div class="alert alert-danger">
+                  {% for error in site_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                </div>
+              {% endif %}
+
+              <button class="btn btn-primary btn-block">
+                <i class="fas fa-plus mr-1"></i> Create Site
+              </button>
+
+              {% if created_site %}
+                <div class="alert alert-success mt-3 mb-0">
+                  <i class="fas fa-check-circle mr-1"></i> Site created: <strong>{{ created_site.name }}</strong>
+                </div>
+              {% endif %}
+            </form>
+          </div>
+
+          <!-- Create User -->
+          <div class="tab-pane fade" id="user-pane" role="tabpanel">
+            <form method="post" class="mb-0" novalidate>
+              {% csrf_token %}
+              <input type="hidden" name="create_user" value="1">
+
+
+              <div class="form-group">
+                <label for="{{ user_form.email.id_for_label }}" class="mb-1">Email <span class="text-danger">*</span></label>
+                {{ user_form.email }}
+                {% for error in user_form.email.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="form-group">
+                <label for="{{ user_form.first_name.id_for_label }}" class="mb-1">First name</label>
+                {{ user_form.first_name }}
+                {% for error in user_form.first_name.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="form-group">
+                <label for="{{ user_form.last_name.id_for_label }}" class="mb-1">Last name</label>
+                {{ user_form.last_name }}
+                {% for error in user_form.last_name.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="form-group">
+                <label for="{{ user_form.password.id_for_label }}" class="mb-1">Password <span class="text-danger">*</span></label>
+                {{ user_form.password }}
+                {% for error in user_form.password.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="form-group">
+                <label for="{{ user_form.is_superuser.id_for_label }}" class="mb-1">Superuser</label>
+                {{ user_form.is_superuser }}
+                {% for error in user_form.is_superuser.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="form-group">
+                <label for="{{ user_form.is_staff.id_for_label }}" class="mb-1">Staff</label>
+                {{ user_form.is_staff }}
+                {% for error in user_form.is_staff.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="form-group">
+                <label for="{{ user_form.is_active.id_for_label }}" class="mb-1">Active</label>
+                {{ user_form.is_active }}
+                {% for error in user_form.is_active.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+              </div>
+
+              {% if user_form.non_field_errors %}
+                <div class="alert alert-danger">
+                  {% for error in user_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                </div>
+              {% endif %}
+
+              <button class="btn btn-success btn-block">
+                <i class="fas fa-user-plus mr-1"></i> Create User
+              </button>
+
+              {% if created_user %}
+                <div class="alert alert-success mt-3 mb-0">
+                  <i class="fas fa-check-circle mr-1"></i> User created: <strong>{{ created_user.username }}</strong>
+                </div>
+              {% endif %}
+            </form>
+          </div>
+
+          <!-- Assign Manager -->
+          <div class="tab-pane fade" id="assign-pane" role="tabpanel">
+            <form method="post" class="mb-0" novalidate>
+              {% csrf_token %}
+              <input type="hidden" name="assign_manager" value="1">
+
+              {% for field in assign_form %}
+                <div class="form-group">
+                  <label for="{{ field.id_for_label }}" class="mb-1">
+                    {{ field.label }}
+                    {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                  </label>
+                  {{ field }}
+                  {% if field.help_text %}<small class="form-text text-muted">{{ field.help_text }}</small>{% endif %}
+                  {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+              {% endfor %}
+
+              {% if assign_form.non_field_errors %}
+                <div class="alert alert-danger">
+                  {% for error in assign_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                </div>
+              {% endif %}
+
+              <button class="btn btn-info btn-block">
+                <i class="fas fa-user-shield mr-1"></i> Assign Manager
+              </button>
+
+              {% if assigned %}
+                <div class="alert alert-success mt-3 mb-0">
+                  <i class="fas fa-check-circle mr-1"></i>
+                  Assigned <strong>{{ assigned.1.username }}</strong> to <strong>{{ assigned.0.name }}</strong>
+                </div>
+              {% endif %}
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4 mb-4">
+    <div class="card shadow">
+      <div class="card-header py-3 d-flex align-items-center">
+        <i class="fas fa-link text-primary mr-2"></i>
+        <h6 class="m-0 font-weight-bold text-primary">Quick Links</h6>
+      </div>
+      <div class="card-body">
+        <a href="{% url 'superuser_user_list' %}" class="btn btn-outline-primary btn-block">
+          <i class="fas fa-users mr-2"></i> View All Users
+        </a>
+        <a href="{% url 'superuser_sites' %}" class="btn btn-outline-secondary btn-block">
+          <i class="fas fa-building mr-2"></i> View All Sites
+        </a>
+        <a href="{% url 'superuser_assign' %}" class="btn btn-outline-info btn-block">
+          <i class="fas fa-random mr-2"></i> Manager Assignment
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // Add BS4 styling if widgets don't include it already
+  document.querySelectorAll('input, select, textarea').forEach(function(el){
+    if (el.type === 'hidden' || el.type === 'checkbox' || el.type === 'radio') return;
+    if (!el.classList.contains('form-control')) el.classList.add('form-control');
+    if (!el.classList.contains('form-control-sm')) el.classList.add('form-control-sm');
+  });
+
+  // If something was created/assigned, auto-open the relevant tab
+  {% if created_user %}
+    $('#user-tab').tab('show');
+  {% elif assigned %}
+    $('#assign-tab').tab('show');
+  {% else %}
+    // default stays on site tab
+  {% endif %}
+})();
+</script>
+{% endblock %}

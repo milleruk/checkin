@@ -1,0 +1,150 @@
+{% extends "sbadmin/base.html" %}
+{% block title %}Site Settings - {{ site.name }}{% endblock %}
+
+{% block site_dropdown %}
+  <div class="mb-3">
+    <form method="get" action="">
+      <label for="siteDropdown" class="font-weight-bold">Switch Site:</label>
+      <select id="siteDropdown" name="site" class="form-control" onchange="window.location='?site='+this.value">
+        {% for s in sites %}
+          <option value="{{ s.id }}" {% if s.id == site.id %}selected{% endif %}>{{ s.name }}</option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
+{% endblock %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="h3 mb-0 text-gray-800">Site Settings</h1>
+    <div class="small text-muted">{{ site.name }}</div>
+  </div>
+  <div>
+    <a href="{% url 'manager_dashboard' %}?site={{ site.id }}" class="btn btn-sm btn-outline-secondary">
+      <i class="fas fa-arrow-left mr-1"></i> Back to dashboard
+    </a>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-8 col-xl-7">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-cogs text-primary mr-2"></i>
+          <h6 class="m-0 font-weight-bold text-primary">Configuration</h6>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {{ form.media }}
+
+          {# Render fields nicely (instead of form.as_p) #}
+          {% for field in form %}
+            <div class="form-group">
+              <label for="{{ field.id_for_label }}" class="mb-1">
+                {{ field.label }}
+                {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+              </label>
+
+              {{ field }}
+
+              {% if field.help_text %}
+                <small class="form-text text-muted">{{ field.help_text }}</small>
+              {% endif %}
+
+              {% for error in field.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endfor %}
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <div class="d-flex align-items-center justify-content-between mt-4">
+            <a href="{% url 'manager_dashboard' %}?site={{ site.id }}" class="btn btn-outline-secondary">
+              Cancel
+            </a>
+            <button type="submit" class="btn btn-success">
+              <i class="fas fa-save mr-1"></i> Save Settings
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4 col-xl-5">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3 d-flex align-items-center">
+        <i class="fas fa-info-circle text-info mr-2"></i>
+        <h6 class="m-0 font-weight-bold text-info">Tips</h6>
+      </div>
+      <div class="card-body">
+        <ul class="mb-0 small text-muted">
+          <li class="mb-2">Changes apply immediately after saving.</li>
+          <li class="mb-2">If you adjust portal URLs, update printed QR codes too.</li>
+          <li class="mb-2">Keep settings consistent across sites to reduce confusion for staff.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card shadow mb-4">
+      <div class="card-header py-3 d-flex align-items-center">
+        <i class="fas fa-key text-warning mr-2"></i>
+        <h6 class="m-0 font-weight-bold text-warning">Security</h6>
+      </div>
+      <div class="card-body small">
+        <div>
+          If a portal token is ever compromised, you can
+          <button id="rotateTokensBtn" class="btn btn-sm btn-warning ml-2">Rotate Tokens</button>
+          <a href="{% url 'rotate_token' site.id %}" id="hiddenRotateLink" style="display:none;"></a>
+        </div>
+      </div>
+    </div>
+
+    {# Optional: show a quick summary card if you want #}
+    <div class="card shadow mb-4">
+      <div class="card-header py-3 d-flex align-items-center">
+        <i class="fas fa-building text-primary mr-2"></i>
+        <h6 class="m-0 font-weight-bold text-primary">Site</h6>
+      </div>
+      <div class="card-body small">
+        <div><strong>Name:</strong> {{ site.name }}</div>
+        <div class="text-muted mt-1">Adjust operational settings for this location.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // Add BS4 form-control styling if your widgets don't already include it
+  // (Safe: only applies to inputs/selects/textarea without existing classes)
+  document.querySelectorAll('input, select, textarea').forEach(function(el){
+    if (el.type === 'hidden' || el.type === 'checkbox' || el.type === 'radio' || el.classList.contains('form-control')) return;
+    // Some widgets (e.g. date/time) might want form-control-sm
+    el.classList.add('form-control');
+  });
+
+  // Rotate tokens button: check confirm before navigating
+  var rotateBtn = document.getElementById('rotateTokensBtn');
+  if (rotateBtn) {
+    rotateBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      // Optionally, you could show a custom modal here for extra confirmation
+      window.location = document.getElementById('hiddenRotateLink').href;
+    });
+  }
+})();
+</script>
+{% endblock %}

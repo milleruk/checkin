@@ -1,0 +1,87 @@
+<nav class="navbar navbar-expand navbar-light bg-white topbar mb-3 static-top shadow-sm"
+     style="border-bottom:1px solid rgba(0,0,0,0.06);">
+
+  <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+    <i class="fa fa-bars"></i>
+  </button>
+
+  <!-- Left: Site switcher -->
+  <form class="form-inline mr-auto">
+    {% if sites and site %}
+      <div class="d-flex align-items-center">
+        <span class="d-none d-sm-inline text-muted small mr-2">
+          <i class="fas fa-map-marker-alt mr-1"></i> Site
+        </span>
+
+        <select class="form-control form-control-sm" name="site" id="siteSelectorNav"
+                style="min-width:220px;">
+          {% for s in sites %}
+            <option value="{{ s.id }}" {% if s.id == site.id %}selected{% endif %}>{{ s.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    {% endif %}
+  </form>
+
+  <!-- Right -->
+  <ul class="navbar-nav ml-auto">
+    <div class="topbar-divider d-none d-sm-block"></div>
+
+    <li class="nav-item dropdown no-arrow">
+      <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ request.user.username }}</span>
+        <img class="img-profile rounded-circle" alt=""
+             src="https://ui-avatars.com/api/?name={{ request.user.username|urlencode }}&background=4e73df&color=fff">
+      </a>
+
+      <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+          {% if request.user.is_superuser or request.user.sitemanager_set.exists %}
+          <a class="dropdown-item" href="{% url 'manager_profile' %}">
+            <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+            Profile
+          </a>
+          {% endif %}
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="dropdown-item" style="width:100%;text-align:left;">
+              <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+              Logout
+            </button>
+          </form>
+      </div>
+    </li>
+  </ul>
+</nav>
+
+{% if sites and site %}
+<script>
+(function() {
+  var sel = document.getElementById('siteSelectorNav');
+  if (!sel) return;
+
+  function buildUrlForSite(siteId, path) {
+    var patterns = [
+      {re: /^\/manager\/?$/, url: function(id){ return '/manager/?site=' + id; }},
+      {re: /^\/manager\/(\d+)\/staff\/?$/, url: function(id){ return '/manager/' + id + '/staff/'; }},
+      {re: /^\/manager\/(\d+)\/audit\/?$/, url: function(id){ return '/manager/' + id + '/audit/'; }},
+      {re: /^\/manager\/(\d+)\/daily\/?$/, url: function(id){ return '/manager/' + id + '/daily/'; }},
+      {re: /^\/manager\/(\d+)\/qr\/?$/, url: function(id){ return '/manager/' + id + '/qr/'; }},
+      {re: /^\/manager\/(\d+)\/settings\/?$/, url: function(id){ return '/manager/' + id + '/settings/'; }},
+    ];
+
+    for (var i = 0; i < patterns.length; i++) {
+      if (patterns[i].re.test(path)) return patterns[i].url(siteId);
+    }
+
+    // Fallback to dashboard with querystring
+    return '/manager/?site=' + siteId;
+  }
+
+  sel.addEventListener('change', function() {
+    var siteId = sel.value;
+    window.location.href = buildUrlForSite(siteId, window.location.pathname);
+  });
+})();
+</script>
+{% endif %}

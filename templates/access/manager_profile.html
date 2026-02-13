@@ -1,0 +1,192 @@
+{% extends "sbadmin/base.html" %}
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<style>
+  .profile-wrap { max-width: 980px; }
+  .profile-card { border-radius: 14px; }
+  .section-title { font-size: 1.05rem; }
+  .req { color: #e74a3b; font-weight: 700; }
+  .help-card { border-left: 4px solid #4e73df; }
+  .help-card ul { margin-bottom: 0; padding-left: 1.25rem; }
+  .help-card li { margin: .25rem 0; }
+</style>
+
+<div class="container-fluid">
+  <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4">
+    <div>
+      <h1 class="h3 mb-0 text-gray-800">My Profile</h1>
+      <div class="small text-muted">Update your details and optionally change your password.</div>
+    </div>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-12 profile-wrap">
+      <div class="card shadow profile-card">
+        <div class="card-body p-4 p-lg-5">
+
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">
+                {% for e in form.non_field_errors %}<div>{{ e }}</div>{% endfor %}
+              </div>
+            {% endif %}
+
+            <!-- Details -->
+            <div class="d-flex align-items-center mb-3">
+              <i class="fas fa-user text-primary mr-2"></i>
+              <div class="section-title font-weight-bold text-gray-800">Your details</div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.first_name.id_for_label }}" class="mb-1">
+                    {{ form.first_name.label }}{% if form.first_name.field.required %} <span class="req">*</span>{% endif %}
+                  </label>
+                  {{ form.first_name }}
+                  {% for e in form.first_name.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.last_name.id_for_label }}" class="mb-1">
+                    {{ form.last_name.label }}{% if form.last_name.field.required %} <span class="req">*</span>{% endif %}
+                  </label>
+                  {{ form.last_name }}
+                  {% for e in form.last_name.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                </div>
+              </div>
+
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label for="{{ form.email.id_for_label }}" class="mb-1">
+                    {{ form.email.label }}{% if form.email.field.required %} <span class="req">*</span>{% endif %}
+                  </label>
+                  {{ form.email }}
+                  {% for e in form.email.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                </div>
+              </div>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Password -->
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <div class="d-flex align-items-center">
+                <i class="fas fa-lock text-primary mr-2"></i>
+                <div class="section-title font-weight-bold text-gray-800">Change password</div>
+              </div>
+              <span class="badge badge-light">Optional</span>
+            </div>
+
+            <div class="alert alert-light help-card small">
+              <div class="d-flex align-items-start">
+                <i class="fas fa-info-circle text-primary mr-2 mt-1"></i>
+                <div>
+                  Leave these blank if you don’t want to change your password.
+                  {% if form.password1.help_text %}
+                    <div class="mt-2">{{ form.password1.help_text|safe }}</div>
+                  {% else %}
+                    <ul class="mt-2">
+                      <li>At least 8 characters</li>
+                      <li>Not too similar to your details</li>
+                      <li>Not a commonly used password</li>
+                      <li>Not entirely numeric</li>
+                    </ul>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.password1.id_for_label }}" class="mb-1">
+                    {{ form.password1.label|default:"New password" }}
+                  </label>
+                  <div class="input-group">
+                    {{ form.password1 }}
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary" type="button" data-toggle="pw" data-target="id_password1" aria-label="Show or hide password">
+                        <i class="fas fa-eye"></i>
+                      </button>
+                    </div>
+                  </div>
+                  {% for e in form.password1.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="{{ form.password2.id_for_label }}" class="mb-1">
+                    {{ form.password2.label|default:"Confirm new password" }}
+                  </label>
+                  <div class="input-group">
+                    {{ form.password2 }}
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary" type="button" data-toggle="pw" data-target="id_password2" aria-label="Show or hide password">
+                        <i class="fas fa-eye"></i>
+                      </button>
+                    </div>
+                  </div>
+                  {% for e in form.password2.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+                </div>
+              </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between">
+              <div class="text-muted small mb-3 mb-md-0">
+                <i class="fas fa-check-circle mr-1"></i> Changes apply immediately after saving.
+              </div>
+              <button type="submit" class="btn btn-primary btn-lg px-4">
+                <i class="fas fa-save mr-2"></i> Update Profile
+              </button>
+            </div>
+
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // Make inputs look like SB Admin / Bootstrap
+  document.querySelectorAll('input, select, textarea').forEach(function (el) {
+    if (el.type === 'hidden' || el.type === 'checkbox' || el.type === 'radio') return;
+    if (!el.classList.contains('form-control')) el.classList.add('form-control');
+  });
+
+  // Tighten password fields to match UI
+  ['id_password1','id_password2'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.classList.add('form-control');
+  });
+
+  // Show/hide password buttons
+  document.querySelectorAll('button[data-toggle="pw"]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var targetId = btn.getAttribute('data-target');
+      var input = document.getElementById(targetId);
+      if (!input) return;
+
+      input.type = (input.type === 'password') ? 'text' : 'password';
+
+      var icon = btn.querySelector('i');
+      if (icon) {
+        icon.classList.toggle('fa-eye');
+        icon.classList.toggle('fa-eye-slash');
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}

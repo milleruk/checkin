@@ -1,0 +1,31 @@
+{% extends "sbadmin/public_base.html" %}
+{% block content %}
+<div class="container py-4">
+  <div class="text-center mb-4">
+    <h1 class="h3 mb-1">Associated Staff Sign Out</h1>
+    <div class="text-muted">For {{ site.name }}</div>
+  </div>
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+      {% if invalid_token %}
+        <div class="alert alert-danger">This sign-out link is invalid.<br>The token is not recognized. Please check your link or ask staff for assistance.</div>
+      {% elif already_signed_out %}
+        <div class="alert alert-info">You are already signed out.</div>
+      {% else %}
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" class="form-control" value="{{ staff.name }}" readonly>
+          </div>
+          <div class="form-group">
+            <label>Association Type</label>
+            <input type="text" class="form-control" value="{{ staff.get_association_type_display }}" readonly>
+          </div>
+          <button type="submit" class="btn btn-danger btn-block">Sign Out</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

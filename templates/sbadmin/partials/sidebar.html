@@ -1,0 +1,117 @@
+{% load static %}
+
+<ul class="navbar-nav sidebar sidebar-dark accordion" id="accordionSidebar"
+    style="background: linear-gradient(135deg, #1f6ed4, #1cb4d3);">
+
+  <!-- Brand -->
+  <a class="sidebar-brand d-flex align-items-center justify-content-center py-3"
+     href="{% url 'manager_dashboard' %}" style="text-decoration:none;">
+    <div class="sidebar-brand-icon" style="font-size:1.15rem;">
+      <i class="fas fa-door-open"></i>
+    </div>
+    <div class="sidebar-brand-text mx-3" style="letter-spacing:-0.02em;">
+      Check In
+    </div>
+  </a>
+
+  {% if site %}
+    <div class="px-3 pb-2">
+      <div class="small text-white-50">Current site</div>
+      <div class="text-white font-weight-bold" style="line-height:1.2;">
+        {{ site.name }}
+      </div>
+    </div>
+  {% endif %}
+
+  <hr class="sidebar-divider my-2" style="opacity:.25;">
+
+  {% with p=request.path %}
+  <!-- Core -->
+  <li class="nav-item {% if p == '/manager/' or p == '/manager' %}active{% endif %}">
+    <a class="nav-link py-2" href="{% url 'manager_dashboard' %}">
+      <i class="fas fa-fw fa-tachometer-alt"></i>
+      <span>Dashboard</span>
+    </a>
+  </li>
+
+  {% if site %}
+    <hr class="sidebar-divider my-2" style="opacity:.25;">
+    <div class="sidebar-heading pt-2">Site</div>
+
+    <li class="nav-item {% if '/audit' in p %}active{% endif %}">
+      <a class="nav-link py-2" href="{% url 'manager_audit' site.id %}">
+        <i class="fas fa-fw fa-clipboard-list"></i>
+        <span>Audit Log</span>
+      </a>
+    </li>
+
+    <li class="nav-item {% if '/daily' in p %}active{% endif %}">
+      <a class="nav-link py-2" href="{% url 'manager_daily_events' site.id %}">
+        <i class="fas fa-fw fa-calendar-day"></i>
+        <span>Daily Attendance</span>
+      </a>
+    </li>
+
+    <li class="nav-item {% if '/staff' in p %}active{% endif %}">
+      <a class="nav-link py-2" href="{% url 'manager_staff' site.id %}">
+        <i class="fas fa-fw fa-users"></i>
+        <span>Staff</span>
+      </a>
+    </li>
+
+    <li class="nav-item {% if '/qr' in p %}active{% endif %}">
+      <a class="nav-link py-2" href="{% url 'manager_qr' site.id %}">
+        <i class="fas fa-fw fa-qrcode"></i>
+        <span>Links</span>
+      </a>
+    </li>
+
+    <li class="nav-item {% if 'site_settings' in p or '/settings' in p %}active{% endif %}">
+      <a class="nav-link py-2" href="{% url 'site_settings' site.id %}">
+        <i class="fas fa-fw fa-cogs"></i>
+        <span>Site Settings</span>
+      </a>
+    </li>
+  {% endif %}
+
+  {% if request.user.is_superuser %}
+    <hr class="sidebar-divider my-2" style="opacity:.25;">
+    <div class="sidebar-heading pt-2">Superuser</div>
+
+    <li class="nav-item {% if 'superuser' in p and 'user_list' not in p and 'sites' not in p %}active{% endif %}">
+      <a class="nav-link py-2" href="{% url 'superuser_admin' %}">
+        <i class="fas fa-fw fa-user-shield"></i>
+        <span>Admin Panel</span>
+      </a>
+    </li>
+
+    <li class="nav-item {% if 'superuser_user' in p %}active{% endif %}">
+      <a class="nav-link py-2" href="{% url 'superuser_user_list' %}">
+        <i class="fas fa-fw fa-users"></i>
+        <span>All Users</span>
+      </a>
+    </li>
+
+    <li class="nav-item {% if 'superuser_sites' in p or 'superuser_site' in p %}active{% endif %}">
+      <a class="nav-link py-2" href="{% url 'superuser_sites' %}">
+        <i class="fas fa-fw fa-building"></i>
+        <span>Sites</span>
+      </a>
+    </li>
+  {% endif %}
+  {% endwith %}
+
+  <hr class="sidebar-divider d-none d-md-block" style="opacity:.25;">
+
+  <div class="text-center d-none d-md-inline pb-3">
+    <button class="rounded-circle border-0" id="sidebarToggle"></button>
+  </div>
+</ul>
+
+<style>
+  /* Slightly tighter nav items */
+  .sidebar .nav-item .nav-link { opacity: .92; }
+  .sidebar .nav-item.active .nav-link { font-weight: 700; opacity: 1; }
+  .sidebar .nav-item.active .nav-link i { opacity: 1; }
+  .sidebar .sidebar-heading { color: rgba(255,255,255,.65); }
+</style>

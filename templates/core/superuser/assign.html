@@ -1,0 +1,25 @@
+{% extends "sbadmin/base.html" %}
+{% block title %}Superuser: Site Assignment{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Assign Managers to Sites</h2>
+  <div class="row">
+    <div class="col-md-4">
+      <h5>Unassigned Users</h5>
+      <ul class="list-group mb-3" id="users-list"></ul>
+    </div>
+    <div class="col-md-8">
+      <h5>Sites</h5>
+      <div id="sites-list"></div>
+    </div>
+  </div>
+  <script id="users-data" type="application/json">{{ users|safe }}</script>
+  <script id="sites-data" type="application/json">{{ sites|safe }}</script>
+  <script id="assignments-data" type="application/json">{{ assignments|safe }}</script>
+  <script>
+    // CSRF token for AJAX
+    window.CSRF_TOKEN = '{{ csrf_token }}';
+  </script>
+  <script src="/static/js/superuser_assign.js"></script>
+</div>
+{% endblock %}

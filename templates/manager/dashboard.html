@@ -1,0 +1,415 @@
+{% extends "sbadmin/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<!-- Top status / controls -->
+<div class="card shadow mb-4">
+  <div class="card-body py-3">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between">
+      <div class="mb-2 mb-md-0">
+        <h1 class="h4 mb-0 text-gray-800">{{ site.name }}</h1>
+        <div class="small text-muted">
+          <i class="fas fa-sync-alt mr-1" id="refreshIcon"></i>
+          <span id="refreshMsg">Auto-refresh every 5 minutes</span>
+          <span class="ml-2">•</span>
+          <span class="ml-2 small text-muted">Last refreshed: <span id="lastRefreshedTime">just now</span></span>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center flex-wrap">
+        <div class="d-flex align-items-center mr-3 mb-2 mb-md-0">
+          <span class="small text-gray-600 mr-2">Auto</span>
+          <div class="custom-control custom-switch mb-0">
+            <input type="checkbox" class="custom-control-input" id="autoRefreshToggle" checked>
+            <label class="custom-control-label" for="autoRefreshToggle"></label>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-sm btn-outline-primary mb-2 mb-md-0" id="manualRefreshBtn">
+          <i class="fas fa-redo mr-1"></i> Refresh
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- KPI row (streamlined) -->
+<div class="row">
+  <div class="col-md-3 mb-4">
+    <div class="card border-left-success shadow h-100">
+      <div class="card-body py-3">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Currently In</div>
+            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ in_count }}</div>
+          </div>
+          <i class="fas fa-door-open fa-2x text-gray-300"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3 mb-4">
+    <div class="card border-left-info shadow h-100">
+      <div class="card-body py-3">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Staff Seen Today</div>
+            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ staff_in_today|length }}</div>
+          </div>
+          <i class="fas fa-user-check fa-2x text-gray-300"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3 mb-4">
+    <div class="card border-left-primary shadow h-100">
+      <div class="card-body py-3">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Staff</div>
+            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_staff }}</div>
+          </div>
+          <i class="fas fa-users fa-2x text-gray-300"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3 mb-4">
+    <div class="card border-left-warning shadow h-100">
+      <div class="card-body py-3">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Events Today</div>
+            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_events_today }}</div>
+          </div>
+          <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Exceptions (compact, instead of 2 more KPI cards) -->
+<div class="card shadow mb-4">
+  <div class="card-body py-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between">
+    <div class="d-flex align-items-center">
+      <i class="fas fa-exclamation-triangle text-danger mr-2"></i>
+      <div class="font-weight-bold text-gray-800">Exceptions</div>
+      <span class="small text-muted ml-2">Auto clock-outs</span>
+    </div>
+
+    <div class="mt-2 mt-md-0">
+      <span class="badge badge-danger mr-2">Yesterday: {{ auto_clockout_yesterday }}</span>
+      <span class="badge badge-danger">This week: {{ auto_clockout_week }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Main: One unified table + Who’s In -->
+<div class="row">
+
+  <!-- Unified On-Site list -->
+  <div class="col-lg-7 mb-4">
+    <div class="card shadow h-100">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-clipboard-list text-primary mr-2"></i>
+          <h6 class="m-0 font-weight-bold text-primary">People On Site</h6>
+          <span class="badge badge-light ml-2">
+            {{ visitors_in|length|add:associates_in|length|add:contractors_in|length }}
+          </span>
+        </div>
+
+        <input type="text"
+               class="form-control form-control-sm"
+               style="max-width:260px;"
+               placeholder="Search name/company…"
+               id="onsiteSearch">
+      </div>
+
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0" id="onsiteTable">
+            <thead class="thead-light">
+              <tr>
+                <th class="pl-3">Name</th>
+                <th>Type</th>
+                <th>Company</th>
+                <th>Details</th>
+                <th>Signed In</th>
+                <th class="text-right pr-3">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for v in visitors_in %}
+                <tr>
+                  <td class="pl-3">{{ v.name }}</td>
+                  <td><span class="badge badge-warning">Visitor</span></td>
+                  <td>{{ v.company }}</td>
+                  <td class="text-muted small">{{ v.reason }}</td>
+                  <td>{{ v.signed_in_at }}</td>
+                  <td class="text-right pr-3">
+                    <button type="button" class="btn btn-danger btn-sm js-signout"
+                            data-entity-type="visitor" data-entity-id="{{ v.id }}" data-entity-name="{{ v.name|escapejs }}">
+                      <i class="fas fa-sign-out-alt mr-1"></i> Sign Out
+                    </button>
+                  </td>
+                </tr>
+              {% endfor %}
+
+              {% for a in associates_in %}
+                <tr>
+                  <td class="pl-3">{{ a.name }}</td>
+                  <td>
+                    <span class="badge badge-info">Associate</span>
+                    <span class="badge badge-secondary">{{ a.get_association_type_display }}</span>
+                  </td>
+                  <td>{{ a.company }}</td>
+                  <td class="text-muted small">{{ a.reason }}</td>
+                  <td>{{ a.signed_in_at }}</td>
+                  <td class="text-right pr-3">
+                    <button type="button" class="btn btn-danger btn-sm js-signout"
+                            data-entity-type="associate" data-entity-id="{{ a.id }}" data-entity-name="{{ a.name|escapejs }}">
+                      <i class="fas fa-sign-out-alt mr-1"></i> Sign Out
+                    </button>
+                  </td>
+                </tr>
+              {% endfor %}
+
+              {% for c in contractors_in %}
+                <tr>
+                  <td class="pl-3">{{ c.name }}</td>
+                  <td><span class="badge badge-dark">Contractor</span></td>
+                  <td>{{ c.company }}</td>
+                  <td class="text-muted small">{{ c.work_description }}</td>
+                  <td>{{ c.signed_in_at }}</td>
+                  <td class="text-right pr-3">
+                    <button type="button" class="btn btn-danger btn-sm js-signout"
+                            data-entity-type="contractor" data-entity-id="{{ c.id }}" data-entity-name="{{ c.name|escapejs }}">
+                      <i class="fas fa-sign-out-alt mr-1"></i> Sign Out
+                    </button>
+                  </td>
+                </tr>
+              {% endfor %}
+
+              {% if not visitors_in and not associates_in and not contractors_in %}
+                <tr>
+                  <td colspan="6" class="text-muted py-3 text-center">No visitors/associates/contractors currently on site.</td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card-footer bg-white small text-muted">
+        One table, one search, less chaos 😄
+      </div>
+    </div>
+  </div>
+
+  <!-- Who’s In + (collapsed) staff today -->
+  <div class="col-lg-5 mb-4">
+
+    <div class="card shadow mb-4">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-user-friends text-primary mr-2"></i>
+          <h6 class="m-0 font-weight-bold text-primary">Who’s In (Staff)</h6>
+          <span class="badge badge-light ml-2">{{ who_is_in|length }}</span>
+        </div>
+        <input type="text" class="form-control form-control-sm" style="max-width:220px;"
+               placeholder="Search…" data-filter-table="whoTable">
+      </div>
+
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0" id="whoTable">
+            <thead class="thead-light"><tr><th class="pl-3">Name</th><th>Last IN</th></tr></thead>
+            <tbody>
+              {% for row in who_is_in %}
+                <tr>
+                  <td class="pl-3"><a href="{% url 'manager_staff_detail' site.id row.id %}">{{ row.name }}</a></td>
+                  <td>{{ row.last_at }}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="2" class="text-muted py-3 text-center">No one currently in.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Collapsible staff today -->
+    <div class="card shadow">
+      <div class="card-header py-3 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-calendar-day text-primary mr-2"></i>
+          <h6 class="m-0 font-weight-bold text-primary mb-0">Staff Seen Today</h6>
+          <span class="badge badge-light ml-2">{{ staff_in_today|length }}</span>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary" type="button" data-toggle="collapse" data-target="#todayCollapse">
+          Toggle
+        </button>
+      </div>
+
+      <div id="todayCollapse" class="collapse">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0" id="todayTable">
+              <thead class="thead-light"><tr><th class="pl-3">Name</th></tr></thead>
+              <tbody>
+                {% for row in staff_in_today %}
+                  <tr><td class="pl-3"><a href="{% url 'manager_staff_detail' site.id row.id %}">{{ row.name }}</a></td></tr>
+                {% empty %}
+                  <tr><td class="text-muted py-3 text-center">No staff have checked in today.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- One reusable sign-out form + modal (ONLY ONCE) -->
+<form method="post" id="signOutForm">
+  {% csrf_token %}
+  <input type="hidden" name="entity_type" id="signOutEntityType">
+  <input type="hidden" name="entity_id" id="signOutEntityId">
+  <input type="hidden" name="action" value="sign_out">
+</form>
+
+<div class="modal fade" id="signOutModal" tabindex="-1" role="dialog" aria-labelledby="signOutModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="signOutModalLabel">Confirm sign out</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Sign out <strong id="signOutName">this person</strong>?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger btn-sm" id="confirmSignOutBtn">
+          <i class="fas fa-sign-out-alt mr-1"></i> Sign Out
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var refreshInterval = 300000;
+  var refreshTimer = null;
+
+  function updateLastRefreshed() {
+    var now = new Date();
+    var timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+    var el = document.getElementById('lastRefreshedTime');
+    if (el) el.textContent = timeStr;
+  }
+
+  function setAutoRefresh(enabled) {
+    var icon = document.getElementById('refreshIcon');
+    if (icon) icon.classList.toggle('fa-spin', enabled);
+    if (refreshTimer) clearInterval(refreshTimer);
+    if (enabled) refreshTimer = setInterval(reloadDashboard, refreshInterval);
+  }
+
+  function bindFilters() {
+    document.querySelectorAll('[data-filter-table]').forEach(function(input){
+      input.addEventListener('input', function(){
+        var tableId = input.getAttribute('data-filter-table');
+        var table = document.getElementById(tableId);
+        if (!table) return;
+
+        var filter = (input.value || '').toLowerCase().trim();
+        var rows = table.querySelectorAll('tbody tr');
+
+        rows.forEach(function(row){
+          var text = (row.innerText || '').toLowerCase();
+          row.style.display = (!filter || text.indexOf(filter) !== -1) ? '' : 'none';
+        });
+      });
+    });
+
+    var onsiteSearch = document.getElementById('onsiteSearch');
+    var onsiteTable = document.getElementById('onsiteTable');
+    if (onsiteSearch && onsiteTable) {
+      onsiteSearch.addEventListener('input', function(){
+        var q = (onsiteSearch.value || '').toLowerCase().trim();
+        onsiteTable.querySelectorAll('tbody tr').forEach(function(row){
+          var text = (row.innerText || '').toLowerCase();
+          row.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+        });
+      });
+    }
+  }
+
+  function bindSignOutButtons() {
+    document.querySelectorAll('.js-signout').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        document.getElementById('signOutEntityType').value = btn.getAttribute('data-entity-type');
+        document.getElementById('signOutEntityId').value = btn.getAttribute('data-entity-id');
+        document.getElementById('signOutName').textContent = btn.getAttribute('data-entity-name') || 'this person';
+        $('#signOutModal').modal('show');
+      });
+    });
+
+    var confirmBtn = document.getElementById('confirmSignOutBtn');
+    if (confirmBtn) confirmBtn.addEventListener('click', function(){ document.getElementById('signOutForm').submit(); });
+  }
+
+  function bindRefreshControls() {
+    var toggle = document.getElementById('autoRefreshToggle');
+    if (toggle) toggle.addEventListener('change', function(){ setAutoRefresh(toggle.checked); });
+
+    var manual = document.getElementById('manualRefreshBtn');
+    if (manual) manual.addEventListener('click', function(){ reloadDashboard(true); });
+  }
+
+  function reloadDashboard(manual) {
+    if (manual) {
+      var icon = document.getElementById('refreshIcon');
+      if (icon) icon.classList.add('fa-spin');
+      setTimeout(function(){ if (icon) icon.classList.remove('fa-spin'); }, 800);
+    }
+
+    fetch(window.location.href, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+      .then(function(resp){ return resp.text(); })
+      .then(function(html){
+        var parser = new DOMParser();
+        var doc = parser.parseFromString(html, 'text/html');
+        var newContent = doc.querySelector('.container-fluid');
+        var current = document.querySelector('.container-fluid');
+        if (newContent && current) {
+          current.innerHTML = newContent.innerHTML;
+          bindFilters();
+          bindSignOutButtons();
+          bindRefreshControls();
+          updateLastRefreshed();
+        }
+      });
+  }
+
+  bindFilters();
+  bindSignOutButtons();
+  bindRefreshControls();
+  setAutoRefresh(true);
+  updateLastRefreshed();
+})();
+</script>
+
+{% endblock %}

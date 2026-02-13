@@ -1,0 +1,61 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Staff Portal{% endblock %}</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/4.1.4/css/sb-admin-2.min.css">
+
+  <style>
+    body { background:#f8fafc; }
+
+    /* Full-width content wrapper */
+    .staff-shell{
+      width: 100%;
+      max-width: 1600px;   /* gives “wide app” feel without being ridiculous on ultrawide */
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    @media (min-width: 1200px){
+      .staff-shell{ padding: 0 28px; }
+    }
+
+    /* Make cards breathe more on wide screens */
+    .page-pad{ padding: 1.25rem 0; }
+
+    /* Reduce the “boxed” look by matching background + soft separators */
+    .card { border: 1px solid rgba(0,0,0,0.06); border-radius: 14px; }
+    .card-header { background: #fff; border-bottom: 1px solid rgba(0,0,0,0.06); }
+
+    /* Fix random horizontal scroll on small screens */
+    html, body { overflow-x: hidden; }
+  </style>
+
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+  {# Your public header partial (the slim one we made) #}
+  {% include "sbadmin/partials/public_theme.html" %}
+
+  <main class="page-pad">
+    <div class="staff-shell">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  {# Use the improved public footer or your current one #}
+  {% include "sbadmin/partials/public_footer.html" %}
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/4.1.4/js/sb-admin-2.min.js"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

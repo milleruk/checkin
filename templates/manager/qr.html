@@ -1,0 +1,159 @@
+{% extends "sbadmin/base.html" %}
+{% block title %}QR{% endblock %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="h3 mb-0 text-gray-800">QR Codes & Portal Links</h1>
+    <div class="small text-muted">{{ site.name }}</div>
+  </div>
+</div>
+
+<div class="card shadow mb-4">
+  <div class="card-header py-3 d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center">
+      <i class="fas fa-qrcode fa-lg text-primary mr-2"></i>
+      <h6 class="m-0 font-weight-bold text-primary">Portal & Access Links</h6>
+      <span class="badge badge-pill badge-light ml-2">{{ portal_links|length }}</span>
+    </div>
+  </div>
+
+  <div class="card-body">
+    {% if portal_links %}
+      <div class="row">
+        {% for link in portal_links %}
+          <div class="col-xl-6 mb-3">
+            <div class="border rounded p-3 h-100">
+              <div class="d-flex align-items-start justify-content-between">
+                <div class="mr-3">
+                  <div class="font-weight-bold text-gray-800 mb-1">
+                    {{ link.type }}
+                  </div>
+
+                  <div class="small text-muted mb-2">Portal URL</div>
+
+                  <div class="d-flex align-items-center flex-wrap">
+                    <code id="urlText{{ forloop.counter }}"
+                          class="mr-2 mb-2"
+                          style="font-size:12px; word-break:break-all;">
+                      {{ link.url }}
+                    </code>
+
+                    <div class="mb-2">
+                      <a class="btn btn-sm btn-outline-primary mr-1"
+                         href="{{ link.url }}" target="_blank" rel="noopener">
+                        <i class="fas fa-external-link-alt mr-1"></i> Open
+                      </a>
+
+                      <button class="btn btn-sm btn-outline-secondary"
+                              type="button"
+                              data-copy-target="urlText{{ forloop.counter }}">
+                        <i class="fas fa-copy mr-1"></i> Copy
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="small text-muted mb-0">
+                    Use this link on a browser, or scan the QR to open on mobile.
+                  </div>
+                </div>
+
+                <div class="text-center">
+                  <img
+                    alt="QR"
+                    class="border rounded"
+                    style="width:110px;height:110px;"
+                    src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ link.url|urlencode }}"
+                  >
+                  <div class="small text-muted mt-2">Scan</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="alert alert-light border mt-2 mb-0">
+        <div class="small text-muted mb-0">
+          Tip: print these as small cards and stick them by the entrance / staff room 👍
+        </div>
+      </div>
+    {% else %}
+      <div class="text-center text-muted py-5">
+        <i class="fas fa-qrcode fa-2x mb-3"></i>
+        <div>No portal links configured for this site yet.</div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+(function () {
+  function copyTextFromElementId(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var text = (el.innerText || el.textContent || '').trim();
+    if (!text) return;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    } else {
+      // fallback
+      var tmp = document.createElement('textarea');
+      tmp.value = text;
+      document.body.appendChild(tmp);
+      tmp.select();
+      document.execCommand('copy');
+      document.body.removeChild(tmp);
+    }
+  }
+
+  document.querySelectorAll('[data-copy-target]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var targetId = btn.getAttribute('data-copy-target');
+      copyTextFromElementId(targetId);
+
+      // tiny feedback
+      var original = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-check mr-1"></i> Copied';
+      setTimeout(function(){ btn.innerHTML = original; }, 1200);
+    });
+  });
+
+  // AJAX submit for rotate
+  if (rotateForm) {
+    rotateForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      var formData = new FormData(rotateForm);
+      fetch(rotateForm.action, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: formData
+      })
+      .then(function(response) {
+        if (window.jQuery && $(modal).modal) {
+          $(modal).modal('hide');
+        } else {
+          modal.style.display = 'none';
+        }
+        if (response.ok) {
+          window.location.reload();
+        } else {
+          alert('Failed to rotate token.');
+        }
+      })
+      .catch(function() {
+        if (window.jQuery && $(modal).modal) {
+          $(modal).modal('hide');
+        } else {
+          modal.style.display = 'none';
+        }
+        alert('Failed to rotate token.');
+      });
+    });
+  }
+})();
+</script>
+{% endblock %}

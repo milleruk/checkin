@@ -1,0 +1,13 @@
+{% extends "sbadmin/base.html" %}
+{% block title %}Superuser: Users{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Create New User</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ user_form.as_p }}
+    <button class="btn btn-primary" name="create_user" value="1">Create User</button>
+  </form>
+  {% if created_user %}<div class="alert alert-success mt-2">User created: {{ created_user.username }}</div>{% endif %}
+</div>
+{% endblock %}

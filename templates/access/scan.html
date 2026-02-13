@@ -1,0 +1,376 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ site.name }} - Scan</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f8f9fa;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 24px 8px 32px 8px;
+      box-sizing: border-box;
+    }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 18px;
+      padding: 20px 16px 16px 16px;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      margin-bottom: 24px;
+    }
+    .instructions {
+      background: #e9f7ef;
+      border-left: 4px solid #28a745;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 18px;
+      color: #155724;
+      font-size: 15px;
+    }
+    .pin {
+      font-size: 32px;
+      letter-spacing: 10px;
+      text-align: center;
+      padding: 14px 0;
+      border: 1px solid #ddd;
+      border-radius: 14px;
+      margin-bottom: 16px;
+      background: #f6f6f6;
+      min-height: 48px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 10px;
+    }
+    button {
+      height: 54px;
+      border-radius: 14px;
+      border: 1px solid #ccc;
+      font-size: 20px;
+      background: #fff;
+      transition: background 0.15s, color 0.15s;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    button.primary {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+    }
+    button:active {
+      background: #e2e6ea;
+    }
+    .msg {
+      margin-top: 12px;
+      min-height: 20px;
+      font-size: 15px;
+    }
+    .muted {
+      color: #666;
+      font-size: 15px;
+    }
+    .row {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .row button {
+      flex: 1;
+    }
+    @media (max-width: 600px) {
+      .container { padding: 12px 2vw 24px 2vw; }
+      .card { padding: 14px 6px 10px 6px; }
+      .pin { font-size: 26px; padding: 10px 0; }
+      button { font-size: 18px; height: 46px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 style="margin-bottom:8px;">{{ site.name }}</h2>
+
+    <div class="instructions">
+      <strong>How to check in/out:</strong><br>
+      1. Enter your 6-digit PIN using the keypad below.<br>
+      2. The system will suggest IN or OUT based on your last scan.<br>
+      3. Confirm or cancel the action.<br>
+      <span class="muted">If you make a mistake, use CLR or ⌫ to correct your PIN.</span>
+    </div>
+    <div class="instructions" style="background:#fff3cd;border-left-color:#ffc107;color:#856404;">
+      <strong>PIN Security:</strong> Your PIN is unique to you. <u>Do not share your PIN with anyone else.</u> All actions are logged and traceable to your PIN.
+    </div>
+
+    <div class="card">
+      <div id="step1">
+        <div class="pin" id="pinDisplay">&nbsp;</div>
+        <div class="grid" id="keypad"></div>
+        <div class="msg" id="msg1"></div>
+      </div>
+      <div id="actionedMsg" style="display:none;text-align:center;padding:24px 0 8px 0;font-size:1.15rem;color:#155724;font-weight:600;">
+        Action completed. Please refresh the page to scan again.
+      </div>
+
+      <!-- Modal for IN/OUT confirmation -->
+      <div id="step2modal" style="display:none;position:fixed;z-index:1100;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);align-items:center;justify-content:center;animation:fadeIn 0.18s;">
+        <div id="step2modalBox" style="background:#fff;padding:32px 24px 24px 24px;border-radius:18px;box-shadow:0 4px 24px rgba(0,0,0,0.13);max-width:90vw;min-width:220px;text-align:center;transform:scale(0.98);animation:popIn 0.18s;">
+          <div id="step2icon" style="font-size:2.7rem;margin-bottom:8px;"></div>
+          <div id="step2headline" style="font-size:1.25rem;font-weight:600;margin-bottom:8px;"></div>
+          <h3 id="who" style="margin-bottom:4px;"></h3>
+          <p id="last" class="muted" style="margin-bottom:2px;"></p>
+          <p style="margin-bottom:8px;"><strong>Suggested:</strong> <span id="suggested"></span></p>
+          <div class="row" id="step2btnrow">
+            <button class="primary" id="confirmBtn">Confirm</button>
+            <button id="cancelBtn">Cancel</button>
+          </div>
+          <div class="msg" id="msg2"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modular Popup for Confirmation -->
+    <div id="popup" style="display:none;position:fixed;z-index:1000;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);align-items:center;justify-content:center;">
+      <div style="background:#fff;padding:32px 24px 24px 24px;border-radius:18px;box-shadow:0 4px 24px rgba(0,0,0,0.13);max-width:90vw;min-width:220px;text-align:center;">
+        <div id="popupIcon" style="font-size:2.5rem;margin-bottom:10px;">✅</div>
+        <div id="popupMsg" style="font-size:1.2rem;font-weight:500;margin-bottom:8px;"></div>
+        <div id="popupSub" style="font-size:1rem;color:#666;margin-bottom:12px;"></div>
+        <button id="popupClose" class="primary" style="min-width:90px;">OK</button>
+      </div>
+    </div>
+    <!-- Modular Popup for Flood/Spam Protection -->
+    <div id="popupFlood" style="display:none;position:fixed;z-index:1001;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);align-items:center;justify-content:center;">
+      <div style="background:#fff;padding:32px 24px 24px 24px;border-radius:18px;box-shadow:0 4px 24px rgba(0,0,0,0.13);max-width:90vw;min-width:220px;text-align:center;">
+        <div style="font-size:2.5rem;margin-bottom:10px;color:#ff9800;">⏱️</div>
+        <div style="font-size:1.2rem;font-weight:500;margin-bottom:8px;">You're too fast!</div>
+        <div style="font-size:1rem;color:#666;margin-bottom:12px;">Please wait a moment before trying again. This is to prevent accidental or spam check-ins/outs.</div>
+        <button id="popupFloodClose" class="primary" style="min-width:90px;">OK</button>
+      </div>
+    </div>
+    </div>
+  </div>
+
+<script>
+const token = "{{ token }}";
+const csrf = "{{ csrf_token }}";
+
+let pin = "";
+let payload = null;
+
+const pinDisplay = document.getElementById("pinDisplay");
+const keypad = document.getElementById("keypad");
+const msg1 = document.getElementById("msg1");
+
+const step1 = document.getElementById("step1");
+const step2 = document.getElementById("step2");
+const who = document.getElementById("who");
+const last = document.getElementById("last");
+const suggested = document.getElementById("suggested");
+const msg2 = document.getElementById("msg2");
+
+function renderPin() {
+  pinDisplay.textContent = pin.length ? "•".repeat(pin.length) : "\u00A0";
+}
+
+function btn(text, onClick){
+  const b = document.createElement("button");
+  b.textContent = text;
+  b.onclick = onClick;
+  return b;
+}
+
+function reset(){
+  pin=""; payload=null; msg1.textContent=""; msg2.textContent="";
+  renderPin();
+}
+
+
+
+// Modular popup for invalid PIN
+function showPinError(msg) {
+  let el = document.getElementById("popupPin");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "popupPin";
+    el.style = "display:flex;position:fixed;z-index:1002;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);align-items:center;justify-content:center;";
+    el.innerHTML = `<div style='background:#fff3cd;padding:32px 24px 24px 24px;border-radius:18px;box-shadow:0 4px 24px rgba(0,0,0,0.13);max-width:90vw;min-width:220px;text-align:center;'>
+      <div style='font-size:2.5rem;margin-bottom:10px;color:#ffc107;'>🔒</div>
+      <div style='font-size:1.2rem;font-weight:500;margin-bottom:8px;'>PIN Not Recognised</div>
+      <div style='font-size:1rem;color:#856404;margin-bottom:12px;' id='popupPinMsg'></div>
+      <button id='popupPinClose' class='primary' style='min-width:90px;'>OK</button>
+    </div>`;
+    document.body.appendChild(el);
+    document.getElementById("popupPinClose").onclick = function() {
+      el.style.display = "none";
+    };
+  }
+  document.getElementById("popupPinMsg").textContent = msg;
+  el.style.display = "flex";
+}
+
+async function resolvePin(){
+  msg1.textContent = "Checking…";
+  const fd = new FormData();
+  fd.append("pin", pin);
+  fd.append("csrfmiddlewaretoken", csrf);
+
+  const res = await fetch(`/s/${token}/resolve/`, {method:"POST", body: fd});
+  const data = await res.json();
+
+  if(!res.ok){
+    // If error is flood/spam, show popup
+    if(data && (data.error || "").toLowerCase().includes("flood") || (data.error || "").toLowerCase().includes("spam") || (data.error || "").toLowerCase().includes("too soon") || res.status === 429) {
+      document.getElementById("popupFlood").style.display = "flex";
+      reset();
+      return;
+    }
+    // If error is PIN not recognised, show info/warning popup
+    if (res.status === 401 || (data && (data.error || "").toLowerCase().includes("not recognised"))) {
+      showPinError(data.error || "PIN not recognised.");
+      reset();
+      return;
+    }
+    msg1.textContent = data.error || "Error";
+    reset();
+    return;
+  }
+
+  payload = data;
+  who.textContent = data.staff_name;
+  // Format last event with date and time
+  if (data.last_direction && data.last_at) {
+    const lastDate = new Date(data.last_at);
+    const dateStr = lastDate.toLocaleDateString();
+    const timeStr = lastDate.toLocaleTimeString();
+    last.textContent = `Last: ${data.last_direction} at ${dateStr} ${timeStr}`;
+  } else {
+    last.textContent = "No previous scans";
+  }
+  suggested.textContent = data.suggested;
+
+  // User-friendly modal enhancements
+  const modalBox = document.getElementById("step2modalBox");
+  const icon = document.getElementById("step2icon");
+  const headline = document.getElementById("step2headline");
+  const confirmBtn = document.getElementById("confirmBtn");
+  if (data.suggested === "IN") {
+    modalBox.style.border = "2px solid #28a745";
+    modalBox.style.boxShadow = "0 4px 24px rgba(40,167,69,0.13)";
+    modalBox.style.background = "#e9f7ef";
+    icon.textContent = "🟢";
+    headline.textContent = "Are you checking IN?";
+    confirmBtn.style.background = "#28a745";
+    confirmBtn.style.color = "#fff";
+    confirmBtn.style.borderColor = "#28a745";
+  } else if (data.suggested === "OUT") {
+    modalBox.style.border = "2px solid #dc3545";
+    modalBox.style.boxShadow = "0 4px 24px rgba(220,53,69,0.13)";
+    modalBox.style.background = "#fbeaea";
+    icon.textContent = "🔴";
+    headline.textContent = "Are you checking OUT?";
+    confirmBtn.style.background = "#dc3545";
+    confirmBtn.style.color = "#fff";
+    confirmBtn.style.borderColor = "#dc3545";
+  } else {
+    modalBox.style.border = "1px solid #ddd";
+    modalBox.style.boxShadow = "0 4px 24px rgba(0,0,0,0.13)";
+    modalBox.style.background = "#fff";
+    icon.textContent = "✅";
+    headline.textContent = "Confirm action";
+    confirmBtn.style.background = "#111";
+    confirmBtn.style.color = "#fff";
+    confirmBtn.style.borderColor = "#111";
+  }
+  // Show modal for confirmation
+  document.getElementById("step2modal").style.display = "flex";
+}
+
+
+function showPopup(direction, at) {
+  // Hide keypad and PIN entry, show actioned message
+  document.getElementById("step1").style.display = "none";
+  document.getElementById("actionedMsg").style.display = "block";
+  // Optionally, still show the popup for a moment
+  const popup = document.getElementById("popup");
+  const popupMsg = document.getElementById("popupMsg");
+  const popupSub = document.getElementById("popupSub");
+  const popupIcon = document.getElementById("popupIcon");
+  popupMsg.textContent = `Action completed: ${direction}`;
+  popupSub.textContent = `Time: ${at}`;
+  popupIcon.textContent = direction === "IN" ? "🟢" : direction === "OUT" ? "🔴" : "✅";
+  popup.style.display = "flex";
+}
+
+
+async function confirm(){
+  msg2.textContent = "Saving…";
+  const fd = new FormData();
+  fd.append("staff_id", payload.staff_id);
+  fd.append("direction", payload.suggested);
+  fd.append("csrfmiddlewaretoken", csrf);
+
+  const res = await fetch(`/s/${token}/confirm/`, {method:"POST", body: fd});
+  const data = await res.json();
+  if(!res.ok){
+    // If error is flood/spam, show popup
+    if(data && (data.error || "").toLowerCase().includes("flood") || (data.error || "").toLowerCase().includes("spam") || (data.error || "").toLowerCase().includes("too fast")) {
+      document.getElementById("popupFlood").style.display = "flex";
+      return;
+    }
+    msg2.textContent = data.error || "Error";
+    return;
+  }
+  // Show modular popup
+  showPopup(data.direction, new Date(data.at).toLocaleTimeString());
+  step2.style.display="none";
+  // step1 is hidden and actionedMsg is shown in showPopup
+  reset();
+}
+
+document.getElementById("confirmBtn").onclick = function() {
+  confirm();
+  document.getElementById("step2modal").style.display = "none";
+};
+document.getElementById("cancelBtn").onclick = function() {
+  document.getElementById("step2modal").style.display = "none";
+  reset();
+};
+
+const keys = ["1","2","3","4","5","6","7","8","9","CLR","0","⌫"];
+keys.forEach(k=>{
+  keypad.appendChild(btn(k, ()=>{
+    msg1.textContent="";
+    if(k==="CLR"){ reset(); return; }
+    if(k==="⌫"){ pin = pin.slice(0,-1); renderPin(); return; }
+    if(pin.length<6){ pin+=k; renderPin(); }
+    if(pin.length===6){ resolvePin(); }
+  }));
+});
+
+
+// Popup close handlers
+document.getElementById("popupClose").onclick = function() {
+  document.getElementById("popup").style.display = "none";
+};
+document.getElementById("popupFloodClose").onclick = function() {
+  document.getElementById("popupFlood").style.display = "none";
+};
+
+renderPin();
+</script>
+</body>
+</html>

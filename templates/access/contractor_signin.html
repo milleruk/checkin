@@ -1,0 +1,47 @@
+{% extends "sbadmin/public_base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-sm-10 col-md-8 col-lg-6">
+      <h2 class="mb-4 text-center font-weight-bold" style="font-size:1.5em;">Contractor Sign-In for {{ site.name }}</h2>
+  {% if success %}
+      <div class="alert alert-success text-center mb-4">Thank you for signing in! Your visit has been recorded.</div>
+        <div class="text-center mt-4">
+          <a href="{% url 'portal_public' token=token %}" class="btn btn-primary mb-2 btn-block">Back to Portal</a>
+          {% if form.instance.id %}
+            <div class="mt-3">
+              <a href="{% url 'contractor_self_checkout' token=token contractor_id=form.instance.id %}" class="btn btn-danger btn-lg font-weight-bold btn-block py-3">Self Check-Out (Sign Out)</a>
+              <div class="small text-muted mt-2">Bookmark or keep this page open to sign yourself out when leaving.</div>
+            </div>
+          {% endif %}
+        </div>
+  {% else %}
+        <div class="text-center mb-3">
+          <a href="{% url 'portal_public' token=token %}" class="btn btn-primary btn-block">Back to Portal</a>
+        </div>
+        <form method="post" novalidate class="bg-white p-3 p-md-4 rounded shadow-sm">
+          {% csrf_token %}
+          {% if site.confidentiality_terms %}
+            <div class="alert alert-info small mb-2 mt-3">
+              <strong>Confidentiality Terms:</strong><br>
+              {{ site.confidentiality_terms|safe }}
+            </div>
+          {% endif %}
+          {% load crispy_forms_tags %}
+          {{ form.non_field_errors }}
+          <div class="mb-2">
+            {{ form|crispy }}
+          </div>
+          {% if site.health_safety_procedures %}
+            <div class="alert alert-warning small mb-2">
+              <strong>Health &amp; Safety Procedures:</strong><br>
+              {{ site.health_safety_procedures|safe }}
+            </div>
+          {% endif %}
+          <button type="submit" class="btn btn-success btn-block mt-3">Sign In</button>
+      </form>
+  {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

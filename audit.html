@@ -1,0 +1,123 @@
+{% extends "sbadmin/base.html" %}
+{% block title %}Audit{% endblock %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="h3 mb-0 text-gray-800">Audit Log</h1>
+    <div class="small text-muted">{{ site.name }}</div>
+  </div>
+</div>
+
+<div class="card shadow mb-4">
+  <div class="card-header py-3">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between">
+      <div class="d-flex align-items-center mb-2 mb-md-0">
+        <i class="fas fa-history text-primary mr-2"></i>
+        <h6 class="m-0 font-weight-bold text-primary">Latest events</h6>
+        <span class="badge badge-pill badge-light ml-2">{{ events|length }}</span>
+        <span class="small text-muted ml-2">(max 500)</span>
+      </div>
+
+      <div class="d-flex align-items-center">
+        <div class="mr-2" style="min-width:240px;">
+          <input type="text" id="auditSearch" class="form-control form-control-sm" placeholder="Search staff / direction / time…">
+        </div>
+
+        <div class="custom-control custom-switch mr-3">
+          <input type="checkbox" class="custom-control-input" id="autoOnlyToggle">
+          <label class="custom-control-label small text-gray-600" for="autoOnlyToggle">Auto only</label>
+        </div>
+
+        <form method="get" class="form-inline">
+          <select class="form-control form-control-sm" name="staff" onchange="this.form.submit()">
+            <option value="">All staff</option>
+            {% for s in staff_list %}
+              <option value="{{ s.id }}" {% if selected_staff == s.id %}selected{% endif %}>{{ s.name }}</option>
+            {% endfor %}
+          </select>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0" id="auditTable">
+        <thead class="thead-light">
+          <tr>
+            <th class="pl-3">Time</th>
+            <th>Staff</th>
+            <th>Direction</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in events %}
+            <tr data-auto="{% if e.auto_clockout %}1{% else %}0{% endif %}">
+              <td class="pl-3">{{ e.occurred_at }}</td>
+              <td>
+                <a href="{% url 'manager_staff_detail' site.id e.staff.id %}">{{ e.staff.name }}</a>
+              </td>
+              <td>
+                {% if e.direction|lower == "in" %}
+                  <span class="badge badge-success">IN</span>
+                {% elif e.direction|lower == "out" %}
+                  <span class="badge badge-secondary">OUT</span>
+                {% else %}
+                  <span class="badge badge-light">{{ e.direction }}</span>
+                {% endif %}
+
+                {% if e.auto_clockout %}
+                  <span class="badge badge-warning ml-2" title="Auto clock-out by system">auto</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="3" class="text-muted py-4 text-center">No events.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div id="auditNoResults" class="text-center text-muted py-4" style="display:none;">
+      No matching events.
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var search = document.getElementById('auditSearch');
+  var autoOnly = document.getElementById('autoOnlyToggle');
+  var table = document.getElementById('auditTable');
+  var noResults = document.getElementById('auditNoResults');
+
+  function applyFilters() {
+    if (!table) return;
+
+    var q = (search && search.value ? search.value : '').toLowerCase().trim();
+    var autoOnlyOn = autoOnly && autoOnly.checked;
+
+    var rows = table.querySelectorAll('tbody tr');
+    var visible = 0;
+
+    rows.forEach(function(row) {
+      var text = (row.innerText || '').toLowerCase();
+      var isAuto = row.getAttribute('data-auto') === '1';
+
+      var matchText = (!q) || (text.indexOf(q) !== -1);
+      var matchAuto = (!autoOnlyOn) || isAuto;
+
+      var show = matchText && matchAuto;
+      row.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    if (noResults) noResults.style.display = (rows.length > 0 && visible === 0) ? '' : 'none';
+  }
+
+  if (search) search.addEventListener('input', applyFilters);
+  if (autoOnly) autoOnly.addEventListener('change', applyFilters);
+})();
+</script>
+{% endblock %}
