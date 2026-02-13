@@ -1,0 +1,25 @@
+{% extends "sbadmin/public_base.html" %}
+
+{% block extra_css %}
+  <style>
+    body { background: linear-gradient(135deg, #1f6ed4, #1cb4d3); color: #fff; }
+    .glass-card{ background: rgba(255,255,255,0.98); border-radius: 16px; padding:1.5rem; color:#222; }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="row align-items-center py-5">
+    <div class="col-lg-7 hero">
+      <h1 class="display-4 font-weight-bold mb-3">Onboarding complete</h1>
+      <p class="lead mb-4">Your site has been created.</p>
+    </div>
+    <div class="col-lg-5">
+      <div class="glass-card text-center">
+        <p class="mb-2">Site <strong>{{ site.name }}</strong> created.</p>
+        <p class="mb-3">Manager: <strong>{{ user.email }}</strong></p>
+        <a class="btn btn-primary btn-block" href="{% url 'login' %}">Sign in as manager</a>
+        <a class="btn btn-light btn-block mt-2" href="/">Return to home</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,218 @@
+{% extends "sbadmin/public_base.html" %}
+
+{% block extra_css %}
+<style>
+  body{
+    background:
+      radial-gradient(1200px 700px at 10% -10%, rgba(78,115,223,.18), transparent 55%),
+      radial-gradient(900px 600px at 90% 0%, rgba(54,185,204,.14), transparent 50%),
+      linear-gradient(180deg, #f8f9fc, #eef2ff 45%, #f8f9fc);
+  }
+
+  .create-wrap{ max-width: 1100px; }
+
+  .hero-card{
+    border:0;
+    border-radius: 1.1rem;
+    background: rgba(255,255,255,.78);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 .5rem 1.5rem rgba(58,59,69,.12);
+  }
+
+  .hero-title{
+    font-weight: 900;
+    letter-spacing: -.02em;
+    color: #1f2937;
+  }
+
+  .step-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:.5rem;
+    padding:.4rem .75rem;
+    border-radius: 999px;
+    border: 1px solid rgba(78,115,223,.20);
+    background: rgba(78,115,223,.10);
+    color: #2e59d9;
+    font-weight: 700;
+    font-size: .9rem;
+    white-space: nowrap;
+  }
+
+  .step-dots{
+    display:flex;
+    gap:.35rem;
+    align-items:center;
+    margin-top:.75rem;
+  }
+  .dot{
+    width: 10px; height: 10px;
+    border-radius: 999px;
+    background: rgba(133,135,150,.35);
+  }
+  .dot.on{ background: #4e73df; }
+
+  .form-card{
+    border:0;
+    border-radius: 1.1rem;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 .5rem 1.5rem rgba(58,59,69,.14);
+  }
+
+  /* Make Django form.as_p look like SBAdmin inputs */
+  .form-card p{ margin-bottom: .9rem; }
+  .form-card label{
+    font-weight: 700;
+    color: #4a5568;
+    margin-bottom: .35rem;
+  }
+  .form-card input[type="text"],
+  .form-card input[type="email"],
+  .form-card input[type="url"],
+  .form-card input[type="number"],
+  .form-card input[type="password"],
+  .form-card textarea,
+  .form-card select{
+    width: 100%;
+    display: block;
+    border-radius: .8rem;
+    border: 1px solid rgba(58,59,69,.18);
+    padding: .65rem .8rem;
+    background: #fff;
+    color: #111827;
+    transition: box-shadow .15s ease, border-color .15s ease;
+  }
+  .form-card textarea{ min-height: 120px; }
+  .form-card input:focus,
+  .form-card textarea:focus,
+  .form-card select:focus{
+    outline: none;
+    border-color: rgba(78,115,223,.55);
+    box-shadow: 0 0 0 .2rem rgba(78,115,223,.18);
+  }
+
+  .helptext, .form-text, .text-muted{
+    color: #6c757d !important;
+    font-size: .9rem;
+  }
+
+  .btn-soft{
+    border-radius: .9rem;
+    padding: .6rem 1rem;
+    font-weight: 700;
+    border: 1px solid rgba(58,59,69,.16);
+    background: rgba(255,255,255,.85);
+  }
+  .btn-soft:hover{ background: #fff; }
+
+  .btn-next{
+    border-radius: .9rem;
+    padding: .6rem 1rem;
+    font-weight: 800;
+  }
+
+  .alert{
+    border-radius: .9rem;
+    box-shadow: 0 .25rem 1rem rgba(58,59,69,.10);
+  }
+
+  @media (max-width: 991.98px){
+    .hero-card{ margin-bottom: 1rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4 create-wrap">
+
+  <div class="row align-items-stretch">
+
+    <!-- Hero / progress -->
+    <div class="col-lg-5 mb-3 mb-lg-0">
+      <div class="hero-card p-4 h-100">
+        <div class="d-flex align-items-center justify-content-between">
+          <span class="step-pill">
+            <i class="fas fa-user-shield"></i>
+            Step 2 of 3
+          </span>
+          <span class="badge badge-light border" style="border-radius:999px;padding:.5rem .75rem;">
+            Manager details
+          </span>
+        </div>
+
+        <h1 class="h2 hero-title mt-3 mb-2">Create manager account</h1>
+        <p class="text-muted mb-3">
+          This person can manage the site, see reports, and assist with staff/visitor sign-in.
+        </p>
+
+        <div class="step-dots" aria-label="Progress">
+          <span class="dot"></span>
+          <span class="dot on"></span>
+          <span class="dot"></span>
+        </div>
+
+        <hr class="my-4">
+
+        <div class="d-flex align-items-start">
+          <div class="mr-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center"
+                 style="width:44px;height:44px;background:rgba(54,185,204,.12);border:1px solid rgba(54,185,204,.20);">
+              <i class="fas fa-key text-info"></i>
+            </div>
+          </div>
+          <div class="text-muted">
+            <div class="font-weight-bold text-gray-800">Tip</div>
+            Use an email address they can access on day one (password resets + notifications).
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div class="col-lg-7">
+      <div class="form-card p-4 p-md-5">
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for err in form.non_field_errors %}
+                <div>{{ err }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% if form.errors %}
+            <div class="alert alert-warning">
+              <strong>There were problems with your submission.</strong>
+              <ul class="mb-0 mt-2">
+                {% for field in form.visible_fields %}
+                  {% for error in field.errors %}
+                    <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                  {% endfor %}
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+
+          {{ form.as_p }}
+
+          <div class="d-flex flex-column flex-sm-row justify-content-between mt-4">
+            <a class="btn btn-soft mb-2 mb-sm-0" href="{% url 'onboarding_site' %}">
+              <i class="fas fa-arrow-left mr-1"></i> Back
+            </a>
+            <button type="submit" class="btn btn-primary btn-next">
+              Next: Billing <i class="fas fa-arrow-right ml-1"></i>
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
