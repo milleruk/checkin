@@ -44,6 +44,11 @@
                          href="{{ link.url }}" target="_blank" rel="noopener">
                         <i class="fas fa-external-link-alt mr-1"></i> Open
                       </a>
+                      {% if link.wfh_url %}
+                      <a class="btn btn-sm btn-outline-secondary mr-1" href="{{ link.wfh_url }}" target="_blank" rel="noopener">
+                        <i class="fas fa-home mr-1"></i> WFH
+                      </a>
+                      {% endif %}
 
                       <button class="btn btn-sm btn-outline-secondary"
                               type="button"

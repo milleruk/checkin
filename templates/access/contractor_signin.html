@@ -1,47 +1,185 @@
 {% extends "sbadmin/public_base.html" %}
 {% block content %}
-<div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-12 col-sm-10 col-md-8 col-lg-6">
-      <h2 class="mb-4 text-center font-weight-bold" style="font-size:1.5em;">Contractor Sign-In for {{ site.name }}</h2>
+
+<style>
+  .cwrap { max-width: 980px; }
+
+  .chero {
+    border: 0;
+    border-radius: 1.25rem;
+    background: linear-gradient(135deg, rgba(133,135,150,.14), rgba(246,194,62,.10));
+    box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.10);
+    overflow: hidden;
+  }
+
+  .ccard {
+    border: 0;
+    border-radius: 1.15rem;
+    box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.10);
+    overflow: hidden;
+  }
+
+  .ctitle {
+    font-weight: 900;
+    letter-spacing: .2px;
+    color: #1f2937;
+  }
+  .csubtitle { color: #6c757d; }
+
+  .cicon {
+    width: 54px; height: 54px;
+    border-radius: 18px;
+    display:flex; align-items:center; justify-content:center;
+    background: rgba(133,135,150,.16);
+    color: #5a5c69;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.35);
+    flex: 0 0 auto;
+  }
+  .cicon i { font-size: 1.25rem; }
+
+  .btn-pill { border-radius: 999px; font-weight: 800; }
+  .btn-lg-pill { border-radius: 999px; font-weight: 900; }
+
+  .notice {
+    border-radius: 1rem;
+    border: 1px solid rgba(0,0,0,.06);
+    box-shadow: 0 .05rem .5rem rgba(58,59,69,.06);
+  }
+
+  /* Improve crispy form readability */
+  .ccard label { font-weight: 700; }
+  .ccard .form-text, .ccard small { color: #6c757d; }
+
+  /* Sticky submit on mobile (prevents endless scrolling) */
+  .sticky-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background: rgba(248,249,252,.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(0,0,0,.06);
+    padding: .75rem;
+    margin: 0 -1.25rem -1.25rem -1.25rem;
+  }
+
+  @media (max-width: 576px){
+    .chero { border-radius: 1rem; }
+    .ccard { border-radius: 1rem; }
+  }
+</style>
+
+<div class="container py-4 cwrap">
+
+  <!-- Hero -->
+  <div class="chero mb-4">
+    <div class="p-4 p-md-5 d-flex align-items-start align-items-md-center justify-content-between">
+      <div class="d-flex align-items-center">
+        <div class="cicon mr-3" aria-hidden="true">
+          <i class="fas fa-hard-hat"></i>
+        </div>
+        <div>
+          <div class="ctitle h4 mb-1">Contractor Sign-In</div>
+          <div class="csubtitle">for <strong>{{ site.name }}</strong></div>
+        </div>
+      </div>
+
+      <div class="text-right">
+        <a href="{% url 'portal_public' token=token %}" class="btn btn-primary btn-sm btn-pill">
+          <i class="fas fa-arrow-left mr-1"></i> Back to Portal
+        </a>
+      </div>
+    </div>
+  </div>
+
   {% if success %}
-      <div class="alert alert-success text-center mb-4">Thank you for signing in! Your visit has been recorded.</div>
-        <div class="text-center mt-4">
-          <a href="{% url 'portal_public' token=token %}" class="btn btn-primary mb-2 btn-block">Back to Portal</a>
+    <!-- Success state -->
+    <div class="card ccard">
+      <div class="card-body p-4">
+
+        <div class="alert alert-success text-center notice mb-3">
+          <strong>Signed in ✅</strong><br>
+          Thank you — your visit has been recorded.
+        </div>
+
+        <div class="alert alert-info notice mb-0">
+          <strong>Self check-out</strong><br>
+          Keep this page open or bookmark it. When you are ready to leave, tap <span class="badge badge-danger">Self Check-Out</span>.
+          <div class="text-muted small mt-2">
+            If you close this page, you can return using the same link or ask staff for assistance.
+          </div>
+        </div>
+
+        <div class="mt-4">
           {% if form.instance.id %}
-            <div class="mt-3">
-              <a href="{% url 'contractor_self_checkout' token=token contractor_id=form.instance.id %}" class="btn btn-danger btn-lg font-weight-bold btn-block py-3">Self Check-Out (Sign Out)</a>
-              <div class="small text-muted mt-2">Bookmark or keep this page open to sign yourself out when leaving.</div>
+            <a href="{% url 'contractor_self_checkout' token=token contractor_id=form.instance.id %}"
+               class="btn btn-danger btn-lg btn-block py-3 btn-lg-pill">
+              <i class="fas fa-sign-out-alt mr-2"></i> Self Check-Out (Sign Out)
+            </a>
+            <div class="text-muted small text-center mt-2">
+              Records your sign-out time and completes your contractor visit.
+            </div>
+          {% else %}
+            <div class="alert alert-warning notice mb-0">
+              <strong>Checkout link unavailable.</strong><br>
+              Please ask reception to sign you out.
             </div>
           {% endif %}
         </div>
-  {% else %}
-        <div class="text-center mb-3">
-          <a href="{% url 'portal_public' token=token %}" class="btn btn-primary btn-block">Back to Portal</a>
+
+        <div class="mt-3 text-center">
+          <a href="{% url 'portal_public' token=token %}" class="btn btn-outline-primary btn-pill">
+            Back to Portal
+          </a>
         </div>
-        <form method="post" novalidate class="bg-white p-3 p-md-4 rounded shadow-sm">
+
+      </div>
+    </div>
+
+  {% else %}
+    <!-- Form state -->
+    <div class="card ccard">
+      <div class="card-body p-4">
+
+        <form method="post" novalidate>
           {% csrf_token %}
+          {% load crispy_forms_tags %}
+
+          {{ form.non_field_errors }}
+
           {% if site.confidentiality_terms %}
-            <div class="alert alert-info small mb-2 mt-3">
-              <strong>Confidentiality Terms:</strong><br>
+            <div class="alert alert-info small notice mb-3">
+              <strong><i class="fas fa-user-shield mr-1"></i> Confidentiality</strong><br>
               {{ site.confidentiality_terms|safe }}
             </div>
           {% endif %}
-          {% load crispy_forms_tags %}
-          {{ form.non_field_errors }}
+
           <div class="mb-2">
             {{ form|crispy }}
           </div>
+
           {% if site.health_safety_procedures %}
-            <div class="alert alert-warning small mb-2">
-              <strong>Health &amp; Safety Procedures:</strong><br>
+            <div class="alert alert-warning small notice mb-3">
+              <strong><i class="fas fa-exclamation-triangle mr-1"></i> Health &amp; Safety</strong><br>
               {{ site.health_safety_procedures|safe }}
             </div>
           {% endif %}
-          <button type="submit" class="btn btn-success btn-block mt-3">Sign In</button>
-      </form>
-  {% endif %}
+
+          <!-- Sticky actions for mobile -->
+          <div class="sticky-actions">
+            <button type="submit" class="btn btn-success btn-block btn-pill">
+              <i class="fas fa-check mr-1"></i> Sign In
+            </button>
+            <div class="text-muted small text-center mt-2">
+              Please ensure details are correct before submitting.
+            </div>
+          </div>
+
+        </form>
+
+      </div>
     </div>
-  </div>
+  {% endif %}
+
 </div>
 {% endblock %}

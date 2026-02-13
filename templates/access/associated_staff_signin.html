@@ -1,43 +1,173 @@
 {% extends "sbadmin/public_base.html" %}
 {% block content %}
-<div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-12 col-sm-10 col-md-8 col-lg-6">
-      <h2 class="mb-4 text-center font-weight-bold" style="font-size:1.5em;">Associated Staff Sign-In for {{ site.name }}</h2>
-      {% if success or already_signed_in %}
-        <div class="alert alert-success text-center mb-4">Thank you for signing in! Your attendance has been recorded.</div>
-        <div class="text-center mt-4">
-          <a href="{% url 'portal_public' token=token %}" class="btn btn-primary mb-2 btn-block">Back to Portal</a>
+
+<style>
+  .awrap { max-width: 980px; }
+
+  .ahero {
+    border: 0;
+    border-radius: 1.25rem;
+    background: linear-gradient(135deg, rgba(54,185,204,.14), rgba(78,115,223,.08));
+    box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.10);
+    overflow: hidden;
+  }
+
+  .acard {
+    border: 0;
+    border-radius: 1.15rem;
+    box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.10);
+    overflow: hidden;
+  }
+
+  .atitle {
+    font-weight: 900;
+    letter-spacing: .2px;
+    color: #1f2937;
+  }
+  .asubtitle { color: #6c757d; }
+
+  .aicon {
+    width: 54px; height: 54px;
+    border-radius: 18px;
+    display:flex; align-items:center; justify-content:center;
+    background: rgba(54,185,204,.16);
+    color: #36b9cc;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.35);
+    flex: 0 0 auto;
+  }
+  .aicon i { font-size: 1.25rem; }
+
+  .btn-pill { border-radius: 999px; font-weight: 800; }
+
+  .notice {
+    border-radius: 1rem;
+    border: 1px solid rgba(0,0,0,.06);
+    box-shadow: 0 .05rem .5rem rgba(58,59,69,.06);
+  }
+
+  /* Make crispy form nicer */
+  .acard label { font-weight: 700; }
+  .acard .form-text, .acard small { color: #6c757d; }
+
+  /* Sticky submit on mobile */
+  .sticky-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background: rgba(248,249,252,.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(0,0,0,.06);
+    padding: .75rem;
+    margin: 0 -1.25rem -1.25rem -1.25rem;
+  }
+
+  @media (max-width: 576px){
+    .ahero { border-radius: 1rem; }
+    .acard { border-radius: 1rem; }
+  }
+</style>
+
+<div class="container py-4 awrap">
+
+  <!-- Hero -->
+  <div class="ahero mb-4">
+    <div class="p-4 p-md-5 d-flex align-items-start align-items-md-center justify-content-between">
+      <div class="d-flex align-items-center">
+        <div class="aicon mr-3" aria-hidden="true">
+          <i class="fas fa-users"></i>
         </div>
-      {% elif signed_out %}
-        <div class="alert alert-info text-center mb-4">
+        <div>
+          <div class="atitle h4 mb-1">Associated Staff Sign-In</div>
+          <div class="asubtitle">for <strong>{{ site.name }}</strong></div>
+        </div>
+      </div>
+
+      <div class="text-right">
+        <a href="{% url 'portal_public' token=token %}" class="btn btn-primary btn-sm btn-pill">
+          <i class="fas fa-arrow-left mr-1"></i> Back to Portal
+        </a>
+      </div>
+    </div>
+  </div>
+
+  {% if success or already_signed_in %}
+    <!-- Success state -->
+    <div class="card acard">
+      <div class="card-body p-4">
+
+        <div class="alert alert-success text-center notice mb-3">
+          <strong>Signed in ✅</strong><br>
+          Thank you — your attendance has been recorded.
+        </div>
+
+        <div class="alert alert-info notice mb-0">
+          <i class="fas fa-info-circle mr-1"></i>
+          If you need to sign in again later, return to the portal and choose <strong>Associated Staff</strong>.
+        </div>
+
+        <div class="mt-4 text-center">
+          <a href="{% url 'portal_public' token=token %}" class="btn btn-primary btn-block btn-pill">
+            Back to Portal
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+  {% elif signed_out %}
+    <!-- Signed out state -->
+    <div class="card acard">
+      <div class="card-body p-4">
+
+        <div class="alert alert-info text-center notice mb-3">
           <strong>You have already signed out.</strong><br>
-          Thank you! If you need to sign in again, please return to the portal or ask staff for assistance.
+          Thank you — if you need to sign in again, return to the portal or ask staff for assistance.
         </div>
-        <div class="text-center mt-4">
-          <a href="{% url 'portal_public' token=token %}" class="btn btn-primary btn-block">Back to Portal</a>
-        </div>
-      {% else %}
-        <div class="text-center mb-3">
-          <a href="{% url 'portal_public' token=token %}" class="btn btn-primary btn-block">Back to Portal</a>
-        </div>
-        <form method="post" novalidate class="bg-white p-3 p-md-4 rounded shadow-sm">
+
+        <a href="{% url 'portal_public' token=token %}" class="btn btn-primary btn-block btn-pill">
+          Back to Portal
+        </a>
+
+      </div>
+    </div>
+
+  {% else %}
+    <!-- Form state -->
+    <div class="card acard">
+      <div class="card-body p-4">
+
+        <form method="post" novalidate>
           {% csrf_token %}
           {% load crispy_forms_tags %}
+
           {{ form.non_field_errors }}
+
           {% if site.confidentiality_terms %}
-            <div class="alert alert-info small mb-2">
-              <strong>Confidentiality Terms:</strong><br>
+            <div class="alert alert-info small notice mb-3">
+              <strong><i class="fas fa-user-shield mr-1"></i> Confidentiality</strong><br>
               {{ site.confidentiality_terms|safe }}
             </div>
           {% endif %}
+
           <div class="mb-2">
             {{ form|crispy }}
           </div>
-          <button type="submit" class="btn btn-success btn-block mt-3">Sign In</button>
+
+          <div class="sticky-actions">
+            <button type="submit" class="btn btn-success btn-block btn-pill">
+              <i class="fas fa-check mr-1"></i> Sign In
+            </button>
+            <div class="text-muted small text-center mt-2">
+              Please check your details before submitting.
+            </div>
+          </div>
+
         </form>
-      {% endif %}
+
+      </div>
     </div>
-  </div>
+  {% endif %}
+
 </div>
 {% endblock %}

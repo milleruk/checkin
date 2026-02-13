@@ -1,31 +1,171 @@
 {% extends "sbadmin/public_base.html" %}
 {% block content %}
-<div class="container py-4">
 
-  <div class="text-center mb-4">
-    <h1 class="h3 mb-1">Welcome</h1>
-    <div class="text-muted">Choose what you need to do for <strong>{{ site.name }}</strong></div>
+<style>
+  /* Page container sizing */
+  .scan-home { max-width: 1100px; }
+
+  /* Header */
+  .scan-hero {
+    border: 0;
+    border-radius: 1.25rem;
+    background: linear-gradient(135deg, rgba(78,115,223,.12), rgba(54,185,204,.10));
+    box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.10);
+    overflow: hidden;
+  }
+  .scan-hero .badge-soft {
+    background: rgba(255,255,255,.75);
+    border: 1px solid rgba(255,255,255,.65);
+    color: #4e73df;
+    font-weight: 700;
+  }
+
+  /* Tiles */
+  .scan-tile {
+    display: block;
+    text-decoration: none !important;
+    color: inherit;
+    height: 100%;
+  }
+  .scan-card {
+    border: 0;
+    border-radius: 1.15rem;
+    box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.10);
+    transition: transform .12s ease, box-shadow .12s ease;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+  .scan-card:before{
+    content:"";
+    position:absolute;
+    inset:0;
+    opacity:.9;
+    background: radial-gradient(600px 180px at 20% 0%, rgba(255,255,255,.35), transparent 65%);
+    pointer-events:none;
+  }
+  .scan-card:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 .35rem 2.2rem 0 rgba(58,59,69,.16);
+  }
+  .scan-card:active{
+    transform: translateY(0px);
+  }
+  .scan-card .card-body{
+    position: relative;
+    padding: 1.25rem 1.25rem 1.1rem 1.25rem;
+  }
+
+  /* Icon blob */
+  .scan-ico {
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.35);
+  }
+  .scan-ico i { font-size: 1.25rem; }
+
+  /* Text */
+  .scan-title {
+    font-weight: 800;
+    letter-spacing: .2px;
+    color: #1f2937;
+  }
+  .scan-desc {
+    color: #6c757d;
+    line-height: 1.35;
+  }
+
+  /* CTA row */
+  .scan-cta {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top: .9rem;
+  }
+  .scan-cta .btn {
+    border-radius: 999px;
+    font-weight: 700;
+  }
+  .scan-cta .hint {
+    color: #9aa0a6;
+    font-size: .85rem;
+    white-space: nowrap;
+  }
+
+  /* Color variants (SB Admin palette-ish) */
+  .variant-primary { border-left: .35rem solid #4e73df; }
+  .variant-primary .scan-ico { background: rgba(78,115,223,.14); color: #4e73df; }
+
+  .variant-info { border-left: .35rem solid #36b9cc; }
+  .variant-info .scan-ico { background: rgba(54,185,204,.14); color: #36b9cc; }
+
+  .variant-warning { border-left: .35rem solid #f6c23e; }
+  .variant-warning .scan-ico { background: rgba(246,194,62,.18); color: #b45309; }
+
+  .variant-secondary { border-left: .35rem solid #858796; }
+  .variant-secondary .scan-ico { background: rgba(133,135,150,.16); color: #5a5c69; }
+
+  /* Mobile ergonomics */
+  @media (max-width: 576px) {
+    .scan-hero { border-radius: 1rem; }
+    .scan-card { border-radius: 1rem; }
+    .scan-ico { width: 52px; height: 52px; border-radius: 16px; }
+    .scan-cta .hint { display:none; } /* reduce clutter on tiny screens */
+  }
+
+  /* Footer micro-copy line spacing */
+  .scan-footer i { opacity: .75; }
+</style>
+
+<div class="container py-4 scan-home">
+
+  <!-- Hero / header -->
+  <div class="scan-hero mb-4">
+    <div class="p-4 p-md-5 d-flex flex-column flex-md-row align-items-md-center justify-content-between">
+      <div class="mb-3 mb-md-0">
+        <div class="d-flex align-items-center mb-2">
+          <span class="badge badge-soft px-3 py-2 mr-2">
+            <i class="fas fa-qrcode mr-1"></i> Sign In / Out
+          </span>
+        </div>
+        <h1 class="h3 mb-1" style="font-weight:900;">Welcome</h1>
+        <div class="text-muted">
+          Choose what you need to do for <strong>{{ site.name }}</strong>
+        </div>
+      </div>
+
+      <div class="text-muted small text-md-right">
+        <div class="mb-1"><i class="fas fa-lock mr-1"></i> Stored securely</div>
+        <div class="mb-1"><i class="fas fa-stopwatch mr-1"></i> Typical check-in under 30 seconds</div>
+        <div><i class="fas fa-question-circle mr-1"></i> If you’re stuck, ask reception</div>
+      </div>
+    </div>
   </div>
 
-  <div class="row justify-content-center">
+  <!-- Tiles -->
+  <div class="row">
+
     <!-- Staff -->
-    <div class="col-12 col-md-6 col-lg-5 mb-4">
-      <a href="{% url 'scan_page' token=token %}" class="text-decoration-none">
-        <div class="card shadow h-100 border-left-primary">
-          <div class="card-body p-4 d-flex">
-            <div class="mr-3">
-              <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
-                   style="width:54px;height:54px;">
-                <i class="fas fa-user fa-lg"></i>
-              </div>
+    <div class="col-12 col-md-6 mb-4">
+      <a href="{% url 'scan_page' token=token %}" class="scan-tile">
+        <div class="card scan-card variant-primary">
+          <div class="card-body d-flex">
+            <div class="scan-ico mr-3" aria-hidden="true">
+              <i class="fas fa-user"></i>
             </div>
             <div class="flex-grow-1">
-              <div class="h5 mb-1 text-gray-800">Staff</div>
-              <div class="text-muted">Sign in or sign out with your PIN</div>
-              <div class="mt-3">
+              <div class="scan-title h5 mb-1">Staff</div>
+              <div class="scan-desc">Sign in or sign out using your 6-digit PIN.</div>
+              <div class="scan-cta">
                 <span class="btn btn-primary btn-sm">
                   Continue <i class="fas fa-arrow-right ml-1"></i>
                 </span>
+                <span class="hint">Fastest option</span>
               </div>
             </div>
           </div>
@@ -34,23 +174,21 @@
     </div>
 
     <!-- Associated staff -->
-    <div class="col-12 col-md-6 col-lg-5 mb-4">
-      <a href="{% url 'associated_staff_signin' token=token %}" class="text-decoration-none">
-        <div class="card shadow h-100 border-left-info">
-          <div class="card-body p-4 d-flex">
-            <div class="mr-3">
-              <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center"
-                   style="width:54px;height:54px;">
-                <i class="fas fa-users fa-lg"></i>
-              </div>
+    <div class="col-12 col-md-6 mb-4">
+      <a href="{% url 'associated_staff_signin' token=token %}" class="scan-tile">
+        <div class="card scan-card variant-info">
+          <div class="card-body d-flex">
+            <div class="scan-ico mr-3" aria-hidden="true">
+              <i class="fas fa-users"></i>
             </div>
             <div class="flex-grow-1">
-              <div class="h5 mb-1 text-gray-800">Associated Staff</div>
-              <div class="text-muted">Locums, trainees, or shared teams</div>
-              <div class="mt-3">
+              <div class="scan-title h5 mb-1">Associated Staff</div>
+              <div class="scan-desc">Locums, trainees, visitors from shared teams.</div>
+              <div class="scan-cta">
                 <span class="btn btn-info btn-sm">
                   Continue <i class="fas fa-arrow-right ml-1"></i>
                 </span>
+                <span class="hint">No PIN needed</span>
               </div>
             </div>
           </div>
@@ -59,23 +197,21 @@
     </div>
 
     <!-- Visitors -->
-    <div class="col-12 col-md-6 col-lg-5 mb-4">
-      <a href="{% url 'visitor_signin' token=token %}" class="text-decoration-none">
-        <div class="card shadow h-100 border-left-warning">
-          <div class="card-body p-4 d-flex">
-            <div class="mr-3">
-              <div class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center"
-                   style="width:54px;height:54px;">
-                <i class="fas fa-id-badge fa-lg"></i>
-              </div>
+    <div class="col-12 col-md-6 mb-4">
+      <a href="{% url 'visitor_signin' token=token %}" class="scan-tile">
+        <div class="card scan-card variant-warning">
+          <div class="card-body d-flex">
+            <div class="scan-ico mr-3" aria-hidden="true">
+              <i class="fas fa-id-badge"></i>
             </div>
             <div class="flex-grow-1">
-              <div class="h5 mb-1 text-gray-800">Visitors</div>
-              <div class="text-muted">Sign in and agree to site terms</div>
-              <div class="mt-3">
+              <div class="scan-title h5 mb-1">Visitors</div>
+              <div class="scan-desc">Sign in and accept the site terms.</div>
+              <div class="scan-cta">
                 <span class="btn btn-warning btn-sm">
                   Start <i class="fas fa-arrow-right ml-1"></i>
                 </span>
+                <span class="hint">Reception-friendly</span>
               </div>
             </div>
           </div>
@@ -84,38 +220,36 @@
     </div>
 
     <!-- Contractors -->
-    <div class="col-12 col-md-6 col-lg-5 mb-4">
-      <a href="{% url 'contractor_signin' token=token %}" class="text-decoration-none">
-        <div class="card shadow h-100 border-left-warning">
-          <div class="card-body p-4 d-flex">
-            <div class="mr-3">
-              <div class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center"
-                   style="width:54px;height:54px;">
-                <i class="fas fa-hard-hat fa-lg"></i>
-              </div>
+    <div class="col-12 col-md-6 mb-4">
+      <a href="{% url 'contractor_signin' token=token %}" class="scan-tile">
+        <div class="card scan-card variant-secondary">
+          <div class="card-body d-flex">
+            <div class="scan-ico mr-3" aria-hidden="true">
+              <i class="fas fa-hard-hat"></i>
             </div>
             <div class="flex-grow-1">
-              <div class="h5 mb-1 text-gray-800">Contractors</div>
-              <div class="text-muted">Sign in and agree to site terms</div>
-              <div class="mt-3">
-                <span class="btn btn-warning btn-sm">
+              <div class="scan-title h5 mb-1">Contractors</div>
+              <div class="scan-desc">Sign in and accept the contractor terms.</div>
+              <div class="scan-cta">
+                <span class="btn btn-secondary btn-sm">
                   Start <i class="fas fa-arrow-right ml-1"></i>
                 </span>
+                <span class="hint">On-site work</span>
               </div>
             </div>
           </div>
         </div>
       </a>
     </div>
+
   </div>
 
-  <div class="text-center mt-2">
-    <div class="text-muted small">
-      <i class="fas fa-lock mr-1"></i> Stored securely
+  <!-- Optional tiny footer (kept simple because hero already covers it) -->
+  <div class="text-center mt-1">
+    <div class="text-muted small scan-footer">
+      <i class="fas fa-shield-alt mr-1"></i> Audit trail enabled
       <span class="mx-2">&bull;</span>
-      <i class="fas fa-stopwatch mr-1"></i> Typical check-in under 30 seconds
-      <span class="mx-2">&bull;</span>
-      <i class="fas fa-question-circle mr-1"></i> If you’re stuck, ask reception
+      <i class="fas fa-clipboard-check mr-1"></i> Supports roll-call
     </div>
   </div>
 

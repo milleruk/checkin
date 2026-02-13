@@ -8,6 +8,10 @@ urlpatterns = [
     path("s/<str:token>/", views.scan_page, name="scan_page"),
     path("s/<str:token>/resolve/", views.scan_resolve_pin, name="scan_resolve_pin"),
     path("s/<str:token>/confirm/", views.scan_confirm, name="scan_confirm"),
+    path("s/<str:token>/resolve_wfh/", views.scan_resolve_pin_wfh, name="scan_resolve_pin_wfh"),
+    path("s/<str:token>/confirm_wfh/", views.scan_confirm_wfh, name="scan_confirm_wfh"),
+    # Work From Home sign-in (PIN-based, separate flow)
+    path("s/<str:token>/wfh/", views.wfh_signin, name="wfh_signin"),
 
     # manager
     path("manager/", views.manager_dashboard, name="manager_dashboard"),

@@ -1,0 +1,11 @@
+{% extends "sbadmin/public_base.html" %}
+{% block title %}WFH Sign-in Complete{% endblock %}
+{% block content %}
+<h1>Work From Home {{ direction }} complete</h1>
+<p>Staff: {{ staff.name }}</p>
+<p>Site: {{ site.name }}</p>
+<p>At: {{ at }}</p>
+{% if note %}<p>Note: {{ note }}</p>{% endif %}
+<p>This session is recorded as remote (WFH).</p>
+<a href="/">Return</a>
+{% endblock %}

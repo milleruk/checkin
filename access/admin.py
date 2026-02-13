@@ -30,7 +30,7 @@ class StaffMemberAdmin(admin.ModelAdmin):
 
 @admin.register(AccessEvent)
 class AccessEventAdmin(admin.ModelAdmin):
-    list_display = ("occurred_at", "site", "staff", "direction")
-    list_filter = ("site", "direction")
+    list_display = ("occurred_at", "site", "staff", "direction", "on_site")
+    list_filter = ("site", "direction", "on_site")
     search_fields = ("staff__name",)
     date_hierarchy = "occurred_at"

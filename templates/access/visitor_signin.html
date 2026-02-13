@@ -1,61 +1,193 @@
 {% extends "sbadmin/public_base.html" %}
 {% block content %}
-<div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-12 col-sm-10 col-md-8 col-lg-6">
-      <h2 class="mb-4 text-center font-weight-bold" style="font-size:1.5em;">Visitor Sign-In for {{ site.name }}</h2>
+
+<style>
+  .vwrap { max-width: 980px; }
+  .vhero {
+    border: 0;
+    border-radius: 1.25rem;
+    background: linear-gradient(135deg, rgba(78,115,223,.12), rgba(246,194,62,.10));
+    box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.10);
+    overflow: hidden;
+  }
+  .vcard {
+    border: 0;
+    border-radius: 1.15rem;
+    box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.10);
+    overflow: hidden;
+  }
+  .vcard .card-body { padding: 1.25rem; }
+  .vtitle {
+    font-weight: 900;
+    letter-spacing: .2px;
+    color: #1f2937;
+  }
+  .vsubtitle { color: #6c757d; }
+  .vicon {
+    width: 52px; height: 52px;
+    border-radius: 18px;
+    display:flex; align-items:center; justify-content:center;
+    background: rgba(78,115,223,.14);
+    color: #4e73df;
+    flex: 0 0 auto;
+  }
+  .vicon i { font-size: 1.25rem; }
+
+  .btn-pill { border-radius: 999px; font-weight: 700; }
+  .btn-lg-pill { border-radius: 999px; font-weight: 900; }
+
+  .vnotice {
+    border-radius: 1rem;
+    border: 1px solid rgba(0,0,0,.06);
+    box-shadow: 0 .05rem .5rem rgba(58,59,69,.06);
+  }
+
+  .sticky-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background: rgba(248,249,252,.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(0,0,0,.06);
+    padding: .75rem;
+    margin: 0 -1.25rem -1.25rem -1.25rem;
+  }
+
+  /* Make crispy form labels + help text a bit nicer on SBAdmin */
+  .vcard label { font-weight: 700; }
+  .vcard .form-text, .vcard small { color: #6c757d; }
+
+  @media (max-width: 576px){
+    .vhero { border-radius: 1rem; }
+    .vcard { border-radius: 1rem; }
+    .sticky-actions { padding: .6rem; }
+  }
+</style>
+
+<div class="container py-4 vwrap">
+
+  <!-- Hero -->
+  <div class="vhero mb-4">
+    <div class="p-4 p-md-5 d-flex align-items-start align-items-md-center justify-content-between">
+      <div class="d-flex align-items-center">
+        <div class="vicon mr-3" aria-hidden="true">
+          <i class="fas fa-id-badge"></i>
+        </div>
+        <div>
+          <div class="vtitle h4 mb-1">Visitor Sign-In</div>
+          <div class="vsubtitle">for <strong>{{ site.name }}</strong></div>
+        </div>
+      </div>
+
+      <div class="text-right">
+        <a href="{% url 'portal_public' token=token %}" class="btn btn-primary btn-sm btn-pill">
+          <i class="fas fa-arrow-left mr-1"></i> Back to Portal
+        </a>
+      </div>
+    </div>
+  </div>
+
   {% if success or already_signed_in %}
-      <div class="alert alert-success text-center mb-4">Thank you for signing in! Your visit has been recorded.</div>
-      <div class="alert alert-info text-center mb-4" style="font-size:1.1em;">
-      <strong>How to Sign Out (Self Check-Out)</strong><br>
-      Please bookmark this page or keep it open on your device.<br>
-      When you are ready to leave, click the <span class="badge badge-danger">Self Check-Out</span> button below to sign yourself out.<br>
-      <span class="text-muted small">If you close this page, you can return using the same link or ask staff for assistance.</span>
-    </div>
-      <div class="text-center mt-4">
-          <a href="{% url 'portal_public' token=token %}" class="btn btn-primary mb-2 btn-block">Back to Portal</a>
-      {% if visitor and visitor.checkout_token %}
-            <div class="mt-4">
-              <a href="{% url 'visitor_self_checkout' token=token checkout_token=visitor.checkout_token %}" class="btn btn-danger btn-lg font-weight-bold btn-block py-3">Self Check-Out</a>
-              <div class="small text-muted mt-3">This will record your sign-out time and complete your visit.<br>Bookmark this page to return and sign out.</div>
+    <!-- Success state -->
+    <div class="card vcard">
+      <div class="card-body">
+        <div class="alert alert-success text-center vnotice mb-3">
+          <strong>Signed in ✅</strong><br>
+          Thank you — your visit has been recorded.
+        </div>
+
+        <div class="alert alert-info vnotice mb-0">
+          <strong>Self check-out</strong><br>
+          Keep this page open or bookmark it. When you’re ready to leave, tap <span class="badge badge-danger">Self Check-Out</span> below.
+          <div class="text-muted small mt-2">
+            If you close this page, you can return using the same link or ask staff for help.
+          </div>
+        </div>
+
+        <div class="mt-4">
+          {% if visitor and visitor.checkout_token %}
+            <a href="{% url 'visitor_self_checkout' token=token checkout_token=visitor.checkout_token %}"
+               class="btn btn-danger btn-lg btn-block py-3 btn-lg-pill">
+              <i class="fas fa-sign-out-alt mr-2"></i> Self Check-Out
+            </a>
+            <div class="text-muted small text-center mt-2">
+              Records your sign-out time and completes your visit.
             </div>
-      {% endif %}
+          {% else %}
+            <div class="alert alert-warning vnotice mb-0">
+              <strong>Checkout link unavailable.</strong><br>
+              Please ask reception to sign you out.
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="mt-3 text-center">
+          <a href="{% url 'portal_public' token=token %}" class="btn btn-outline-primary btn-pill">
+            Back to Portal
+          </a>
+        </div>
+      </div>
     </div>
+
   {% elif signed_out %}
-    <div class="alert alert-info text-center mb-4">
-      <strong>You have already signed out.</strong><br>
-      Thank you for your visit! If you need to sign in again, please return to the portal or ask staff for assistance.
+    <!-- Signed out state -->
+    <div class="card vcard">
+      <div class="card-body">
+        <div class="alert alert-info text-center vnotice mb-3">
+          <strong>You have already signed out.</strong><br>
+          Thanks for your visit — if you need to sign in again, return to the portal or ask staff.
+        </div>
+
+        <a href="{% url 'portal_public' token=token %}" class="btn btn-primary btn-block btn-pill">
+          <i class="fas fa-arrow-left mr-1"></i> Back to Portal
+        </a>
+      </div>
     </div>
-        <div class="text-center mt-4">
-          <a href="{% url 'portal_public' token=token %}" class="btn btn-primary btn-block">Back to Portal</a>
-        </div>
+
   {% else %}
-        <div class="text-center mb-3">
-          <a href="{% url 'portal_public' token=token %}" class="btn btn-primary btn-block">Back to Portal</a>
-        </div>
-        <form method="post" novalidate class="bg-white p-3 p-md-4 rounded shadow-sm">
+    <!-- Form state -->
+    <div class="card vcard">
+      <div class="card-body">
+
+        <form method="post" novalidate>
           {% csrf_token %}
           {% load crispy_forms_tags %}
+
           {{ form.non_field_errors }}
+
           {% if site.confidentiality_terms %}
-            <div class="alert alert-info small mb-2">
-              <strong>Confidentiality Terms:</strong><br>
+            <div class="alert alert-info small vnotice mb-3">
+              <strong><i class="fas fa-user-shield mr-1"></i> Confidentiality</strong><br>
               {{ site.confidentiality_terms|safe }}
             </div>
           {% endif %}
+
           <div class="mb-2">
             {{ form|crispy }}
           </div>
+
           {% if site.health_safety_procedures %}
-            <div class="alert alert-warning small mb-2">
-              <strong>Health &amp; Safety Procedures:</strong><br>
+            <div class="alert alert-warning small vnotice mb-3">
+              <strong><i class="fas fa-hard-hat mr-1"></i> Health &amp; Safety</strong><br>
               {{ site.health_safety_procedures|safe }}
             </div>
           {% endif %}
-          <button type="submit" class="btn btn-success btn-block mt-3">Sign In</button>
-      </form>
-  {% endif %}
+
+          <!-- Sticky actions for mobile -->
+          <div class="sticky-actions">
+            <button type="submit" class="btn btn-success btn-block btn-pill">
+              <i class="fas fa-check mr-1"></i> Sign In
+            </button>
+            <div class="text-muted small text-center mt-2">
+              Typical sign-in takes under 30 seconds.
+            </div>
+          </div>
+
+        </form>
+      </div>
     </div>
-  </div>
+  {% endif %}
+
 </div>
 {% endblock %}

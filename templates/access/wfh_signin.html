@@ -1,0 +1,26 @@
+{% extends "sbadmin/public_base.html" %}
+{% block title %}Work From Home Sign-in{% endblock %}
+{% block content %}
+<h1>Work From Home Sign-in for {{ site.name }}</h1>
+{% if error %}
+  <div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+<form method="post">
+  {% csrf_token %}
+  <div>
+    <label for="pin">PIN (6 digits)</label>
+    <input id="pin" name="pin" maxlength="6" required pattern="\d{6}" />
+  </div>
+  <div>
+    <label><input type="checkbox" name="policy_ack" /> I have read and understood the Work From Home policy</label>
+  </div>
+  <div>
+    <label><input type="checkbox" name="manager_ok" /> My manager has approved this WFH session</label>
+  </div>
+  <div>
+    <label for="note">Optional note / work description</label>
+    <input id="note" name="note" maxlength="255" />
+  </div>
+  <button type="submit">Sign In / Toggle Status</button>
+</form>
+{% endblock %}

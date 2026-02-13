@@ -1,172 +1,507 @@
-
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>{{ site.name }} - Scan</title>
+
   <style>
-    body {
-      font-family: system-ui, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f8f9fa;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    :root{
+      --bg0:#f5f7fb;
+      --bg1:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --border:rgba(2,6,23,.10);
+      --shadow: 0 10px 30px rgba(2,6,23,.08);
+      --shadow2: 0 2px 10px rgba(2,6,23,.06);
+
+      --brand:#2563eb;
+      --brand2:#1d4ed8;
+
+      --ok:#16a34a;
+      --warn:#f59e0b;
+      --bad:#dc2626;
+
+      --radius:18px;
+      --radiusSm:14px;
+      --pad:18px;
+
+      --ring: 0 0 0 4px rgba(37,99,235,.15);
     }
-    .container {
-      width: 100%;
-      max-width: 420px;
-      margin: 0 auto;
-      padding: 24px 8px 32px 8px;
-      box-sizing: border-box;
+
+    * { box-sizing:border-box; }
+    html, body { height:100%; }
+    body{
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      margin:0;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 700px at 10% -10%, rgba(37,99,235,.12), transparent 55%),
+        radial-gradient(900px 600px at 90% 0%, rgba(22,163,74,.10), transparent 50%),
+        linear-gradient(180deg, var(--bg0), #eef2ff 45%, var(--bg0));
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
     }
-    .card {
-      border: 1px solid #ddd;
-      border-radius: 18px;
-      padding: 20px 16px 16px 16px;
-      background: #fff;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-      margin-bottom: 24px;
+
+    a { color:inherit; text-decoration:none; }
+
+    .wrap{
+      width: min(980px, 100%);
+      padding: 22px 14px 34px;
     }
-    .instructions {
-      background: #e9f7ef;
-      border-left: 4px solid #28a745;
-      border-radius: 8px;
-      padding: 12px 16px;
-      margin-bottom: 18px;
-      color: #155724;
+
+    /* Header */
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom: 14px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:0;
+    }
+    .logo{
+      width:44px;height:44px;
+      border-radius:14px;
+      background:
+        radial-gradient(18px 18px at 30% 30%, rgba(255,255,255,.75), transparent 60%),
+        linear-gradient(135deg, var(--brand), #22c55e);
+      box-shadow: var(--shadow2);
+      border: 1px solid rgba(255,255,255,.45);
+      flex:0 0 auto;
+    }
+    .brand h1{
+      font-size: 18px;
+      line-height:1.1;
+      margin:0;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 60vw;
+    }
+    .brand .sub{
+      margin:2px 0 0 0;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .pillRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    /* Buttons */
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius: 999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.7);
+      box-shadow: var(--shadow2);
+      font-weight:600;
+      font-size:14px;
+      line-height:1;
+      cursor:pointer;
+      transition: transform .08s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active{ transform: translateY(1px); box-shadow: 0 1px 6px rgba(2,6,23,.08); }
+    .btn:focus-visible{ outline:none; box-shadow: var(--shadow2), var(--ring); }
+    .btn.primary{
+      background: linear-gradient(180deg, #111827, #0b1220);
+      color:#fff;
+      border-color: rgba(255,255,255,.08);
+    }
+    .btn.soft{
+      background: rgba(255,255,255,.85);
+    }
+    .btn.link{
+      background: transparent;
+      box-shadow:none;
+      border-color: transparent;
+      color: var(--brand2);
+      padding: 8px 10px;
+    }
+
+    /* Layout: desktop two-column, mobile single */
+    .gridLayout{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    @media (min-width: 860px){
+      .gridLayout{
+        grid-template-columns: 1.15fr .85fr;
+        align-items:start;
+      }
+    }
+
+    /* Cards */
+    .card{
+      background: rgba(255,255,255,.82);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      overflow:hidden;
+    }
+    .cardHeader{
+      padding: 14px var(--pad);
+      border-bottom: 1px solid rgba(2,6,23,.06);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .cardHeader .title{
+      font-weight:800;
       font-size: 15px;
+      margin:0;
+      letter-spacing: .2px;
     }
-    .pin {
-      font-size: 32px;
-      letter-spacing: 10px;
-      text-align: center;
-      padding: 14px 0;
-      border: 1px solid #ddd;
-      border-radius: 14px;
-      margin-bottom: 16px;
-      background: #f6f6f6;
-      min-height: 48px;
+    .cardBody{ padding: var(--pad); }
+
+    /* Notices */
+    .notice{
+      border-radius: var(--radiusSm);
+      padding: 12px 14px;
+      border: 1px solid rgba(2,6,23,.08);
+      background: rgba(255,255,255,.65);
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
     }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
+    .notice .ico{ font-size: 18px; line-height:1; margin-top:1px; }
+    .notice .txt{ font-size:14px; color: var(--text); }
+    .notice .txt strong{ font-weight:800; }
+    .notice .txt .muted{ color:var(--muted); font-weight:500; display:block; margin-top:4px; }
+
+    .notice.ok{ border-left: 5px solid var(--ok); }
+    .notice.warn{ border-left: 5px solid var(--warn); background: rgba(255,251,235,.75); }
+    .notice.info{ border-left: 5px solid var(--brand); }
+
+    /* PIN display */
+    .pinBox{
+      display:flex;
+      flex-direction:column;
       gap: 12px;
-      margin-top: 10px;
     }
-    button {
-      height: 54px;
-      border-radius: 14px;
-      border: 1px solid #ccc;
-      font-size: 20px;
-      background: #fff;
-      transition: background 0.15s, color 0.15s;
-      cursor: pointer;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    .pin{
+      font-size: 34px;
+      letter-spacing: 10px;
+      text-align:center;
+      padding: 14px 0;
+      border-radius: var(--radiusSm);
+      border: 1px solid rgba(2,6,23,.12);
+      background: rgba(248,250,252,.9);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+      min-height: 56px;
     }
-    button.primary {
-      background: #111;
-      color: #fff;
-      border-color: #111;
+    .hintRow{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      color: var(--muted);
+      font-size: 13px;
     }
-    button:active {
-      background: #e2e6ea;
-    }
-    .msg {
-      margin-top: 12px;
-      min-height: 20px;
-      font-size: 15px;
-    }
-    .muted {
-      color: #666;
-      font-size: 15px;
-    }
-    .row {
-      display: flex;
+
+    /* Keypad */
+    .keypad{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
       gap: 10px;
-      margin-top: 14px;
+      margin-top: 8px;
     }
-    .row button {
-      flex: 1;
+    .keypad button{
+      height: 56px;
+      border-radius: 16px;
+      border: 1px solid rgba(2,6,23,.12);
+      background: rgba(255,255,255,.9);
+      font-size: 20px;
+      font-weight: 800;
+      box-shadow: 0 1px 2px rgba(2,6,23,.06);
+      transition: transform .06s ease, background .12s ease, border-color .12s ease, box-shadow .12s ease;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
     }
-    @media (max-width: 600px) {
-      .container { padding: 12px 2vw 24px 2vw; }
-      .card { padding: 14px 6px 10px 6px; }
-      .pin { font-size: 26px; padding: 10px 0; }
-      button { font-size: 18px; height: 46px; }
+    .keypad button:active{
+      transform: translateY(1px);
+      background: rgba(241,245,249,.95);
+      box-shadow: 0 1px 1px rgba(2,6,23,.05);
+    }
+    .keypad button:focus-visible{ outline:none; box-shadow: var(--shadow2), var(--ring); }
+    .keypad button.danger{
+      color: var(--bad);
+      border-color: rgba(220,38,38,.25);
+      background: rgba(254,242,242,.9);
+    }
+    .keypad button.action{
+      color: var(--brand2);
+      border-color: rgba(37,99,235,.25);
+      background: rgba(239,246,255,.9);
+    }
+
+    .msg{
+      margin-top: 10px;
+      min-height: 20px;
+      font-size: 14px;
+      color: var(--muted);
+      text-align:center;
+    }
+
+    /* Action completed banner */
+    .done{
+      display:none;
+      text-align:center;
+      padding: 18px;
+      border-radius: var(--radiusSm);
+      background: rgba(22,163,74,.10);
+      border: 1px solid rgba(22,163,74,.25);
+      color: #14532d;
+      font-weight:800;
+    }
+
+    /* Modal shared */
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    @keyframes popIn { from{transform:translateY(8px) scale(.98); opacity:.95} to{transform:translateY(0) scale(1); opacity:1} }
+
+    .modal{
+      display:none;
+      position:fixed;
+      inset:0;
+      z-index:1100;
+      background: rgba(2,6,23,.35);
+      padding: 16px;
+      align-items:center;
+      justify-content:center;
+      animation: fadeIn .14s ease;
+    }
+    .modalBox{
+      width: min(520px, 100%);
+      background: rgba(255,255,255,.95);
+      border: 1px solid rgba(2,6,23,.12);
+      border-radius: 22px;
+      box-shadow: 0 18px 60px rgba(2,6,23,.25);
+      padding: 18px 18px 14px;
+      animation: popIn .14s ease;
+      text-align:center;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .modalBox .bigIcon{ font-size: 44px; margin: 6px 0 6px; }
+    .modalBox h2{ font-size: 18px; margin: 0 0 6px; font-weight: 900; }
+    .modalBox h3{ margin: 6px 0 2px; font-size: 18px; }
+    .modalBox p{ margin: 6px 0; color: var(--muted); font-size: 14px; }
+
+    .modalBtns{
+      display:flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .modalBtns .btn{
+      flex:1;
+      border-radius: 14px;
+      padding: 12px 12px;
+      font-size: 15px;
+    }
+
+    /* Mobile tweaks */
+    @media (max-width: 420px){
+      .wrap{ padding: 16px 10px 26px; }
+      .logo{ width:40px;height:40px; }
+      .pin{ font-size: 30px; letter-spacing: 9px; }
+      .keypad button{ height: 52px; }
     }
   </style>
 </head>
+
 <body>
-  <div class="container">
-    <h2 style="margin-bottom:8px;">{{ site.name }}</h2>
+  <div class="wrap">
 
-    <div class="instructions">
-      <strong>How to check in/out:</strong><br>
-      1. Enter your 6-digit PIN using the keypad below.<br>
-      2. The system will suggest IN or OUT based on your last scan.<br>
-      3. Confirm or cancel the action.<br>
-      <span class="muted">If you make a mistake, use CLR or ⌫ to correct your PIN.</span>
-    </div>
-    <div class="instructions" style="background:#fff3cd;border-left-color:#ffc107;color:#856404;">
-      <strong>PIN Security:</strong> Your PIN is unique to you. <u>Do not share your PIN with anyone else.</u> All actions are logged and traceable to your PIN.
-    </div>
-
-    <div class="card">
-      <div id="step1">
-        <div class="pin" id="pinDisplay">&nbsp;</div>
-        <div class="grid" id="keypad"></div>
-        <div class="msg" id="msg1"></div>
-      </div>
-      <div id="actionedMsg" style="display:none;text-align:center;padding:24px 0 8px 0;font-size:1.15rem;color:#155724;font-weight:600;">
-        Action completed. Please refresh the page to scan again.
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div style="min-width:0;">
+          <h1>{{ site.name }}</h1>
+          <div class="sub">Scan to check in / out</div>
+        </div>
       </div>
 
-      <!-- Modal for IN/OUT confirmation -->
-      <div id="step2modal" style="display:none;position:fixed;z-index:1100;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);align-items:center;justify-content:center;animation:fadeIn 0.18s;">
-        <div id="step2modalBox" style="background:#fff;padding:32px 24px 24px 24px;border-radius:18px;box-shadow:0 4px 24px rgba(0,0,0,0.13);max-width:90vw;min-width:220px;text-align:center;transform:scale(0.98);animation:popIn 0.18s;">
-          <div id="step2icon" style="font-size:2.7rem;margin-bottom:8px;"></div>
-          <div id="step2headline" style="font-size:1.25rem;font-weight:600;margin-bottom:8px;"></div>
-          <h3 id="who" style="margin-bottom:4px;"></h3>
-          <p id="last" class="muted" style="margin-bottom:2px;"></p>
-          <p style="margin-bottom:8px;"><strong>Suggested:</strong> <span id="suggested"></span></p>
-          <div class="row" id="step2btnrow">
-            <button class="primary" id="confirmBtn">Confirm</button>
-            <button id="cancelBtn">Cancel</button>
+      <div class="pillRow">
+        {% if is_wfh %}
+          <a href="{{ normal_scan_url }}" class="btn soft" aria-label="Switch to on-site sign-on">🏢 On-site</a>
+        {% else %}
+          <a href="{{ wfh_url }}" class="btn soft" aria-label="Work from home sign-in">🏠 WFH</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="gridLayout">
+
+      <!-- MAIN: keypad -->
+      <div class="card">
+        <div class="cardHeader">
+          <div class="title">Enter your 6-digit PIN</div>
+          <a class="btn link" href="javascript:void(0)" id="helpToggle">Help</a>
+        </div>
+
+        <div class="cardBody">
+          {% if is_wfh %}
+            <div class="notice info" style="margin-bottom:12px;">
+              <div class="ico">🏠</div>
+              <div class="txt">
+                <strong>Work From Home</strong>
+                <span class="muted">This will be recorded as a remote session and won’t count as on-site roll-call.</span>
+              </div>
+            </div>
+          {% endif %}
+
+          <div id="helpBox" style="display:none; margin-bottom:12px;">
+            <div class="notice ok">
+              <div class="ico">✅</div>
+              <div class="txt">
+                <strong>How it works</strong>
+                <span class="muted">Enter your PIN → we suggest IN/OUT based on your last scan → confirm or cancel. Use <b>CLR</b> or <b>⌫</b> to correct.</span>
+              </div>
+            </div>
           </div>
-          <div class="msg" id="msg2"></div>
+
+          <div class="pinBox" id="step1">
+            <div class="pin" id="pinDisplay" aria-label="PIN entry display">&nbsp;</div>
+
+            <div class="hintRow">
+              <span id="statusHint">Ready</span>
+              <span>🔒 Don’t share your PIN</span>
+            </div>
+
+            <div class="keypad" id="keypad" aria-label="PIN keypad"></div>
+            <div class="msg" id="msg1"></div>
+
+            <div class="notice warn" style="margin-top:12px;">
+              <div class="ico">🔐</div>
+              <div class="txt">
+                <strong>PIN Security</strong>
+                <span class="muted">All actions are logged and traceable to your PIN.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="done" id="actionedMsg">
+            Action completed. Refresh this page to scan again.
+          </div>
+        </div>
+      </div>
+
+      <!-- SIDE: quick info / reassurance -->
+      <div class="card">
+        <div class="cardHeader">
+          <div class="title">Quick tips</div>
+        </div>
+        <div class="cardBody" style="display:flex;flex-direction:column;gap:12px;">
+          <div class="notice">
+            <div class="ico">👆</div>
+            <div class="txt">
+              <strong>Fastest flow</strong>
+              <span class="muted">Type your PIN once — the system auto-checks when you hit 6 digits.</span>
+            </div>
+          </div>
+
+          <div class="notice">
+            <div class="ico">🧠</div>
+            <div class="txt">
+              <strong>IN/OUT suggestion</strong>
+              <span class="muted">We’ll recommend based on your last scan to reduce mistakes.</span>
+            </div>
+          </div>
+
+          <div class="notice">
+            <div class="ico">🧹</div>
+            <div class="txt">
+              <strong>Fix a typo</strong>
+              <span class="muted"><b>⌫</b> deletes one digit, <b>CLR</b> clears all.</span>
+            </div>
+          </div>
+
+          <div class="notice">
+            <div class="ico">⏱️</div>
+            <div class="txt">
+              <strong>Too fast?</strong>
+              <span class="muted">If you see the timer popup, wait a moment and try again.</span>
+            </div>
+          </div>
         </div>
       </div>
 
     </div>
+  </div>
 
-    <!-- Modular Popup for Confirmation -->
-    <div id="popup" style="display:none;position:fixed;z-index:1000;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);align-items:center;justify-content:center;">
-      <div style="background:#fff;padding:32px 24px 24px 24px;border-radius:18px;box-shadow:0 4px 24px rgba(0,0,0,0.13);max-width:90vw;min-width:220px;text-align:center;">
-        <div id="popupIcon" style="font-size:2.5rem;margin-bottom:10px;">✅</div>
-        <div id="popupMsg" style="font-size:1.2rem;font-weight:500;margin-bottom:8px;"></div>
-        <div id="popupSub" style="font-size:1rem;color:#666;margin-bottom:12px;"></div>
-        <button id="popupClose" class="primary" style="min-width:90px;">OK</button>
+  <!-- CONFIRM MODAL -->
+  <div id="step2modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="step2headline">
+    <div id="step2modalBox" class="modalBox">
+      <div id="step2icon" class="bigIcon">✅</div>
+      <h2 id="step2headline">Confirm action</h2>
+
+      <h3 id="who" style="margin-top:8px;"></h3>
+      <p id="last"></p>
+      <p><strong>Suggested:</strong> <span id="suggested"></span></p>
+
+      {% if is_wfh %}
+        <p id="wfhNote"><span style="font-weight:700;">WFH:</span> this will be recorded as a remote session.</p>
+      {% endif %}
+
+      <div class="modalBtns" id="step2btnrow">
+        <button class="btn primary" id="confirmBtn">Confirm</button>
+        <button class="btn soft" id="cancelBtn">Cancel</button>
+      </div>
+
+      <div class="msg" id="msg2" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <!-- SUCCESS POPUP -->
+  <div id="popup" class="modal" style="z-index:1000;">
+    <div class="modalBox">
+      <div id="popupIcon" class="bigIcon">✅</div>
+      <h2 id="popupMsg" style="margin-bottom:6px;"></h2>
+      <p id="popupSub"></p>
+      <div class="modalBtns" style="margin-top:10px;">
+        <button id="popupClose" class="btn primary">OK</button>
       </div>
     </div>
-    <!-- Modular Popup for Flood/Spam Protection -->
-    <div id="popupFlood" style="display:none;position:fixed;z-index:1001;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);align-items:center;justify-content:center;">
-      <div style="background:#fff;padding:32px 24px 24px 24px;border-radius:18px;box-shadow:0 4px 24px rgba(0,0,0,0.13);max-width:90vw;min-width:220px;text-align:center;">
-        <div style="font-size:2.5rem;margin-bottom:10px;color:#ff9800;">⏱️</div>
-        <div style="font-size:1.2rem;font-weight:500;margin-bottom:8px;">You're too fast!</div>
-        <div style="font-size:1rem;color:#666;margin-bottom:12px;">Please wait a moment before trying again. This is to prevent accidental or spam check-ins/outs.</div>
-        <button id="popupFloodClose" class="primary" style="min-width:90px;">OK</button>
+  </div>
+
+  <!-- FLOOD POPUP -->
+  <div id="popupFlood" class="modal" style="z-index:1001;">
+    <div class="modalBox">
+      <div class="bigIcon" style="color:var(--warn);">⏱️</div>
+      <h2 style="margin-bottom:6px;">You're too fast!</h2>
+      <p>Please wait a moment before trying again.</p>
+      <div class="modalBtns" style="margin-top:10px;">
+        <button id="popupFloodClose" class="btn primary">OK</button>
       </div>
-    </div>
     </div>
   </div>
 
 <script>
 const token = "{{ token }}";
 const csrf = "{{ csrf_token }}";
+const resolveUrl = "{{ resolve_url }}";
+const confirmUrl = "{{ confirm_url }}";
+const normalScanUrl = "{{ normal_scan_url }}";
+const isWFH = {{ is_wfh|yesno:"true,false" }};
 
 let pin = "";
 let payload = null;
@@ -176,19 +511,30 @@ const keypad = document.getElementById("keypad");
 const msg1 = document.getElementById("msg1");
 
 const step1 = document.getElementById("step1");
-const step2 = document.getElementById("step2");
 const who = document.getElementById("who");
 const last = document.getElementById("last");
 const suggested = document.getElementById("suggested");
 const msg2 = document.getElementById("msg2");
+const statusHint = document.getElementById("statusHint");
+
+const helpToggle = document.getElementById("helpToggle");
+const helpBox = document.getElementById("helpBox");
+helpToggle.onclick = () => {
+  const on = helpBox.style.display !== "none";
+  helpBox.style.display = on ? "none" : "block";
+  helpToggle.textContent = on ? "Help" : "Hide";
+};
 
 function renderPin() {
   pinDisplay.textContent = pin.length ? "•".repeat(pin.length) : "\u00A0";
+  statusHint.textContent = pin.length ? `${pin.length}/6 digits` : "Ready";
 }
 
-function btn(text, onClick){
+function btn(text, onClick, className){
   const b = document.createElement("button");
+  b.type = "button";
   b.textContent = text;
+  if (className) b.className = className;
   b.onclick = onClick;
   return b;
 }
@@ -198,7 +544,23 @@ function reset(){
   renderPin();
 }
 
+function closeModal(id){
+  const el = document.getElementById(id);
+  el.style.display = "none";
+}
 
+// Close modals on backdrop click + ESC
+["step2modal","popup","popupFlood"].forEach(id=>{
+  const el = document.getElementById(id);
+  el.addEventListener("click", (e)=>{ if(e.target === el) closeModal(id); });
+});
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "Escape"){
+    closeModal("step2modal");
+    closeModal("popup");
+    closeModal("popupFlood");
+  }
+});
 
 // Modular popup for invalid PIN
 function showPinError(msg) {
@@ -206,14 +568,20 @@ function showPinError(msg) {
   if (!el) {
     el = document.createElement("div");
     el.id = "popupPin";
-    el.style = "display:flex;position:fixed;z-index:1002;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);align-items:center;justify-content:center;";
-    el.innerHTML = `<div style='background:#fff3cd;padding:32px 24px 24px 24px;border-radius:18px;box-shadow:0 4px 24px rgba(0,0,0,0.13);max-width:90vw;min-width:220px;text-align:center;'>
-      <div style='font-size:2.5rem;margin-bottom:10px;color:#ffc107;'>🔒</div>
-      <div style='font-size:1.2rem;font-weight:500;margin-bottom:8px;'>PIN Not Recognised</div>
-      <div style='font-size:1rem;color:#856404;margin-bottom:12px;' id='popupPinMsg'></div>
-      <button id='popupPinClose' class='primary' style='min-width:90px;'>OK</button>
-    </div>`;
+    el.className = "modal";
+    el.style.zIndex = 1002;
+    el.style.display = "none";
+    el.innerHTML = `
+      <div class="modalBox" style="background:rgba(255,251,235,.95);border:1px solid rgba(245,158,11,.35);">
+        <div class="bigIcon" style="color:var(--warn);">🔒</div>
+        <h2 style="margin-bottom:6px;">PIN not recognised</h2>
+        <p id="popupPinMsg" style="color:#854d0e;"></p>
+        <div class="modalBtns" style="margin-top:10px;">
+          <button id="popupPinClose" class="btn primary">OK</button>
+        </div>
+      </div>`;
     document.body.appendChild(el);
+    el.addEventListener("click", (e)=>{ if(e.target === el) el.style.display="none"; });
     document.getElementById("popupPinClose").onclick = function() {
       el.style.display = "none";
     };
@@ -224,150 +592,175 @@ function showPinError(msg) {
 
 async function resolvePin(){
   msg1.textContent = "Checking…";
+  statusHint.textContent = "Checking…";
+
   const fd = new FormData();
   fd.append("pin", pin);
   fd.append("csrfmiddlewaretoken", csrf);
 
-  const res = await fetch(`/s/${token}/resolve/`, {method:"POST", body: fd});
+  const res = await fetch(resolveUrl, {method:"POST", body: fd});
   const data = await res.json();
 
   if(!res.ok){
-    // If error is flood/spam, show popup
-    if(data && (data.error || "").toLowerCase().includes("flood") || (data.error || "").toLowerCase().includes("spam") || (data.error || "").toLowerCase().includes("too soon") || res.status === 429) {
+    const err = (data && data.error) ? String(data.error) : "";
+    const low = err.toLowerCase();
+
+    if((low.includes("flood") || low.includes("spam") || low.includes("too soon") || res.status === 429)) {
       document.getElementById("popupFlood").style.display = "flex";
       reset();
       return;
     }
-    // If error is PIN not recognised, show info/warning popup
-    if (res.status === 401 || (data && (data.error || "").toLowerCase().includes("not recognised"))) {
-      showPinError(data.error || "PIN not recognised.");
+    if (res.status === 401 || low.includes("not recognised")) {
+      showPinError(err || "PIN not recognised.");
       reset();
       return;
     }
-    msg1.textContent = data.error || "Error";
+
+    msg1.textContent = err || "Error";
     reset();
     return;
   }
 
   payload = data;
   who.textContent = data.staff_name;
-  // Format last event with date and time
+
   if (data.last_direction && data.last_at) {
     const lastDate = new Date(data.last_at);
     const dateStr = lastDate.toLocaleDateString();
-    const timeStr = lastDate.toLocaleTimeString();
+    const timeStr = lastDate.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
     last.textContent = `Last: ${data.last_direction} at ${dateStr} ${timeStr}`;
   } else {
     last.textContent = "No previous scans";
   }
+
   suggested.textContent = data.suggested;
 
-  // User-friendly modal enhancements
+  // Style modal based on suggestion
   const modalBox = document.getElementById("step2modalBox");
   const icon = document.getElementById("step2icon");
   const headline = document.getElementById("step2headline");
   const confirmBtn = document.getElementById("confirmBtn");
+
+  modalBox.style.background = "rgba(255,255,255,.95)";
+  modalBox.style.borderColor = "rgba(2,6,23,.12)";
+  confirmBtn.className = "btn primary";
+
   if (data.suggested === "IN") {
-    modalBox.style.border = "2px solid #28a745";
-    modalBox.style.boxShadow = "0 4px 24px rgba(40,167,69,0.13)";
-    modalBox.style.background = "#e9f7ef";
+    modalBox.style.borderColor = "rgba(22,163,74,.35)";
+    modalBox.style.background = "rgba(240,253,244,.92)";
     icon.textContent = "🟢";
-    headline.textContent = "Are you checking IN?";
-    confirmBtn.style.background = "#28a745";
-    confirmBtn.style.color = "#fff";
-    confirmBtn.style.borderColor = "#28a745";
+    headline.textContent = "Check IN now?";
+    confirmBtn.style.background = "linear-gradient(180deg, #16a34a, #15803d)";
+    confirmBtn.style.borderColor = "rgba(22,163,74,.35)";
   } else if (data.suggested === "OUT") {
-    modalBox.style.border = "2px solid #dc3545";
-    modalBox.style.boxShadow = "0 4px 24px rgba(220,53,69,0.13)";
-    modalBox.style.background = "#fbeaea";
+    modalBox.style.borderColor = "rgba(220,38,38,.35)";
+    modalBox.style.background = "rgba(254,242,242,.92)";
     icon.textContent = "🔴";
-    headline.textContent = "Are you checking OUT?";
-    confirmBtn.style.background = "#dc3545";
-    confirmBtn.style.color = "#fff";
-    confirmBtn.style.borderColor = "#dc3545";
+    headline.textContent = "Check OUT now?";
+    confirmBtn.style.background = "linear-gradient(180deg, #dc2626, #b91c1c)";
+    confirmBtn.style.borderColor = "rgba(220,38,38,.35)";
   } else {
-    modalBox.style.border = "1px solid #ddd";
-    modalBox.style.boxShadow = "0 4px 24px rgba(0,0,0,0.13)";
-    modalBox.style.background = "#fff";
     icon.textContent = "✅";
     headline.textContent = "Confirm action";
-    confirmBtn.style.background = "#111";
-    confirmBtn.style.color = "#fff";
-    confirmBtn.style.borderColor = "#111";
+    confirmBtn.style.background = "";
+    confirmBtn.style.borderColor = "";
   }
-  // Show modal for confirmation
+
   document.getElementById("step2modal").style.display = "flex";
+  statusHint.textContent = "Ready";
 }
 
-
 function showPopup(direction, at) {
-  // Hide keypad and PIN entry, show actioned message
   document.getElementById("step1").style.display = "none";
   document.getElementById("actionedMsg").style.display = "block";
-  // Optionally, still show the popup for a moment
+
   const popup = document.getElementById("popup");
   const popupMsg = document.getElementById("popupMsg");
   const popupSub = document.getElementById("popupSub");
   const popupIcon = document.getElementById("popupIcon");
+
   popupMsg.textContent = `Action completed: ${direction}`;
-  popupSub.textContent = `Time: ${at}`;
   popupIcon.textContent = direction === "IN" ? "🟢" : direction === "OUT" ? "🔴" : "✅";
+
+  if (isWFH) {
+    popupSub.innerHTML = `Time: ${at}<br><strong>Recorded as WFH.</strong>`;
+    let backBtn = document.getElementById('backToOnsiteBtn');
+    if (!backBtn) {
+      backBtn = document.createElement('a');
+      backBtn.href = normalScanUrl;
+      backBtn.id = 'backToOnsiteBtn';
+      backBtn.className = 'btn soft';
+      backBtn.style.marginTop = '10px';
+      backBtn.textContent = 'Switch to On-site sign-on';
+      popup.querySelector(".modalBox").appendChild(backBtn);
+    }
+  } else {
+    popupSub.textContent = `Time: ${at}`;
+    const existing = document.getElementById('backToOnsiteBtn');
+    if (existing) existing.remove();
+  }
   popup.style.display = "flex";
 }
 
-
 async function confirm(){
   msg2.textContent = "Saving…";
+
   const fd = new FormData();
   fd.append("staff_id", payload.staff_id);
   fd.append("direction", payload.suggested);
   fd.append("csrfmiddlewaretoken", csrf);
 
-  const res = await fetch(`/s/${token}/confirm/`, {method:"POST", body: fd});
+  const res = await fetch(confirmUrl, {method:"POST", body: fd});
   const data = await res.json();
+
   if(!res.ok){
-    // If error is flood/spam, show popup
-    if(data && (data.error || "").toLowerCase().includes("flood") || (data.error || "").toLowerCase().includes("spam") || (data.error || "").toLowerCase().includes("too fast")) {
+    const err = (data && data.error) ? String(data.error) : "";
+    const low = err.toLowerCase();
+    if(low.includes("flood") || low.includes("spam") || low.includes("too fast") || res.status === 429) {
       document.getElementById("popupFlood").style.display = "flex";
       return;
     }
-    msg2.textContent = data.error || "Error";
+    msg2.textContent = err || "Error";
     return;
   }
-  // Show modular popup
-  showPopup(data.direction, new Date(data.at).toLocaleTimeString());
-  step2.style.display="none";
-  // step1 is hidden and actionedMsg is shown in showPopup
+
+  showPopup(data.direction, new Date(data.at).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"}));
+  closeModal("step2modal");
   reset();
 }
 
 document.getElementById("confirmBtn").onclick = function() {
   confirm();
-  document.getElementById("step2modal").style.display = "none";
 };
 document.getElementById("cancelBtn").onclick = function() {
-  document.getElementById("step2modal").style.display = "none";
+  closeModal("step2modal");
   reset();
 };
 
+// Keypad
 const keys = ["1","2","3","4","5","6","7","8","9","CLR","0","⌫"];
 keys.forEach(k=>{
+  let cls = "";
+  if (k === "CLR") cls = "danger";
+  if (k === "⌫") cls = "action";
+
   keypad.appendChild(btn(k, ()=>{
     msg1.textContent="";
     if(k==="CLR"){ reset(); return; }
     if(k==="⌫"){ pin = pin.slice(0,-1); renderPin(); return; }
     if(pin.length<6){ pin+=k; renderPin(); }
     if(pin.length===6){ resolvePin(); }
-  }));
+  }, cls));
 });
-
 
 // Popup close handlers
 document.getElementById("popupClose").onclick = function() {
-  document.getElementById("popup").style.display = "none";
+  closeModal("popup");
+  const btn = document.getElementById('backToOnsiteBtn');
+  if (btn) btn.remove();
 };
 document.getElementById("popupFloodClose").onclick = function() {
-  document.getElementById("popupFlood").style.display = "none";
+  closeModal("popupFlood");
 };
 
 renderPin();

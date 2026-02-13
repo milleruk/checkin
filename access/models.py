@@ -104,6 +104,7 @@ class AccessEvent(models.Model):
     direction = models.CharField(max_length=3, choices=DIRECTION_CHOICES)
     occurred_at = models.DateTimeField(auto_now_add=True)
     auto_clockout = models.BooleanField(default=False, help_text="True if this event was an automatic clock-out at 23:00 GMT.")
+    on_site = models.BooleanField(default=True, help_text="True for physical on-site events; False for remote/WFH events.")
 
     class Meta:
         indexes = [

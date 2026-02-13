@@ -210,12 +210,20 @@ def portal_staff(request, token: str):
     # Staff currently in the building (latest AccessEvent direction == IN)
     from .models import StaffMember, AccessEvent
     from django.db.models import OuterRef, Subquery
-    latest_dir = AccessEvent.objects.filter(site=site, staff_id=OuterRef("pk")).order_by("-occurred_at").values("direction")[:1]
-    latest_at = AccessEvent.objects.filter(site=site, staff_id=OuterRef("pk")).order_by("-occurred_at").values("occurred_at")[:1]
+    latest_dir = AccessEvent.objects.filter(site=site, staff_id=OuterRef("pk"), on_site=True).order_by("-occurred_at").values("direction")[:1]
+    latest_at = AccessEvent.objects.filter(site=site, staff_id=OuterRef("pk"), on_site=True).order_by("-occurred_at").values("occurred_at")[:1]
     staff_in = StaffMember.objects.filter(site=site, is_active=True).annotate(
         last_direction=Subquery(latest_dir),
         last_at=Subquery(latest_at),
     ).filter(last_direction=AccessEvent.IN).order_by("name")
+
+    # Staff currently WFH (latest remote event is IN)
+    latest_wfh_dir = AccessEvent.objects.filter(site=site, staff_id=OuterRef("pk"), on_site=False).order_by("-occurred_at").values("direction")[:1]
+    latest_wfh_at = AccessEvent.objects.filter(site=site, staff_id=OuterRef("pk"), on_site=False).order_by("-occurred_at").values("occurred_at")[:1]
+    staff_wfh = StaffMember.objects.filter(site=site, is_active=True).annotate(
+        last_wfh_direction=Subquery(latest_wfh_dir),
+        last_wfh_at=Subquery(latest_wfh_at),
+    ).filter(last_wfh_direction=AccessEvent.IN).order_by("name")
 
     from core.perms import site_ids_for_user
     from core.models import Site
@@ -234,25 +242,31 @@ def portal_staff(request, token: str):
         "contractor_form": contractor_form,
         "msg": msg,
         "staff_in": staff_in,
+        "staff_wfh": staff_wfh,
     })
 
 def portal_keypad(request, token: str):
     token_obj = get_object_or_404(SiteToken, token=token, type="keypad", is_active=True, site__is_active=True)
     site = token_obj.site
     # Use the existing scan.html template for keypad sign-in
-    return render(request, "access/scan.html", {"site": site, "token": token})
+    resolve_url = reverse('scan_resolve_pin', kwargs={'token': token})
+    confirm_url = reverse('scan_confirm', kwargs={'token': token})
+    normal_scan = reverse('scan_page', kwargs={'token': token})
+    wfh_url = reverse('wfh_signin', kwargs={'token': token})
+    return render(request, "access/scan.html", {"site": site, "token": token, "resolve_url": resolve_url, "confirm_url": confirm_url, "is_wfh": False, "normal_scan_url": normal_scan, "wfh_url": wfh_url})
 
 def portal_fire(request, token: str):
     token_obj = get_object_or_404(SiteToken, token=token, type="fire", is_active=True, site__is_active=True)
     site = token_obj.site
     # Use the existing public_staff_list.html template for fire roll call
-    latest_dir = AccessEvent.objects.filter(site=site, staff_id=OuterRef("pk")).order_by("-occurred_at").values("direction")[:1]
-    latest_at = AccessEvent.objects.filter(site=site, staff_id=OuterRef("pk")).order_by("-occurred_at").values("occurred_at")[:1]
+    latest_dir = AccessEvent.objects.filter(site=site, staff_id=OuterRef("pk"), on_site=True).order_by("-occurred_at").values("direction")[:1]
+    latest_at = AccessEvent.objects.filter(site=site, staff_id=OuterRef("pk"), on_site=True).order_by("-occurred_at").values("occurred_at")[:1]
     who_is_in = StaffMember.objects.filter(site=site, is_active=True).annotate(
         last_direction=Subquery(latest_dir),
         last_at=Subquery(latest_at),
     ).filter(last_direction=AccessEvent.IN).order_by("name")
-    return render(request, "access/public_staff_list.html", {"site": site, "who_is_in": who_is_in, "now": now(), "token": token})
+    normal_scan = reverse('scan_page', kwargs={'token': token})
+    return render(request, "access/public_staff_list.html", {"site": site, "who_is_in": who_is_in, "now": now(), "token": token, "normal_scan_url": normal_scan})
 from django.utils.timezone import now
 
 # Public view for on-site staff (fire evacuation)
@@ -260,8 +274,8 @@ def public_staff_list(request, fire_token: str):
     from core.models import SiteToken
     token_obj = get_object_or_404(SiteToken, token=fire_token, type="fire", is_active=True, site__is_active=True)
     site = token_obj.site
-    latest_dir = AccessEvent.objects.filter(site=site, staff_id=OuterRef("pk")).order_by("-occurred_at").values("direction")[:1]
-    latest_at = AccessEvent.objects.filter(site=site, staff_id=OuterRef("pk")).order_by("-occurred_at").values("occurred_at")[:1]
+    latest_dir = AccessEvent.objects.filter(site=site, staff_id=OuterRef("pk"), on_site=True).order_by("-occurred_at").values("direction")[:1]
+    latest_at = AccessEvent.objects.filter(site=site, staff_id=OuterRef("pk"), on_site=True).order_by("-occurred_at").values("occurred_at")[:1]
     who_is_in = StaffMember.objects.filter(site=site, is_active=True).annotate(
         last_direction=Subquery(latest_dir),
         last_at=Subquery(latest_at),
@@ -317,7 +331,11 @@ DOUBLE_SCAN_SECONDS = 30
 def scan_page(request, token: str):
     # Use SiteToken for check-in QR (type 'public' or 'checkin')
     token_obj = get_object_or_404(SiteToken, token=token, is_active=True, site__is_active=True)
-    return render(request, "access/scan.html", {"site": token_obj.site, "token": token})
+    resolve_url = reverse('scan_resolve_pin', kwargs={'token': token})
+    confirm_url = reverse('scan_confirm', kwargs={'token': token})
+    normal_scan = reverse('scan_page', kwargs={'token': token})
+    wfh_url = reverse('wfh_signin', kwargs={'token': token})
+    return render(request, "access/scan.html", {"site": token_obj.site, "token": token, "resolve_url": resolve_url, "confirm_url": confirm_url, "is_wfh": False, "normal_scan_url": normal_scan, "wfh_url": wfh_url})
 
 @transaction.atomic
 def scan_resolve_pin(request, token: str):
@@ -381,6 +399,85 @@ def scan_confirm(request, token: str):
 
     ev = AccessEvent.objects.create(site=token_obj.site, staff=staff, direction=direction)
     return JsonResponse({"ok": True, "direction": ev.direction, "at": ev.occurred_at.isoformat()})
+
+
+@transaction.atomic
+def scan_resolve_pin_wfh(request, token: str):
+    # same as scan_resolve_pin but used by WFH keypad flow
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+
+    token_obj = get_object_or_404(SiteToken, token=token, is_active=True, site__is_active=True)
+    pin = (request.POST.get("pin") or "").strip()
+
+    if not (pin.isdigit() and len(pin) == 6):
+        return JsonResponse({"error": "PIN must be exactly 6 digits."}, status=400)
+
+    staff_qs = StaffMember.objects.select_for_update().filter(site=token_obj.site, is_active=True)
+    matched = None
+    for s in staff_qs:
+        if s.check_pin(pin):
+            matched = s
+            break
+    if not matched:
+        return JsonResponse({"error": "PIN not recognised."}, status=401)
+
+    last = AccessEvent.objects.filter(site=token_obj.site, staff=matched).order_by("-occurred_at").first()
+    if last and (timezone.now() - last.occurred_at).total_seconds() < DOUBLE_SCAN_SECONDS:
+        return JsonResponse({
+            "error": "Flood/spam protection: You are acting too soon. Please wait a moment before trying again.",
+            "last_direction": last.direction,
+            "last_at": last.occurred_at.isoformat(),
+        }, status=429)
+
+    suggested = AccessEvent.OUT if (last and last.direction == AccessEvent.IN) else AccessEvent.IN
+
+    return JsonResponse({
+        "staff_id": matched.id,
+        "staff_name": matched.name,
+        "suggested": suggested,
+        "last_direction": last.direction if last else None,
+        "last_at": last.occurred_at.isoformat() if last else None,
+    })
+
+
+@transaction.atomic
+def scan_confirm_wfh(request, token: str):
+    # similar to scan_confirm but records on_site=False
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+
+    token_obj = get_object_or_404(SiteToken, token=token, is_active=True, site__is_active=True)
+    staff_id = request.POST.get("staff_id")
+    direction = request.POST.get("direction")
+
+    if direction not in (AccessEvent.IN, AccessEvent.OUT):
+        return JsonResponse({"error": "Invalid direction."}, status=400)
+
+    staff = get_object_or_404(StaffMember, id=staff_id, site=token_obj.site, is_active=True)
+
+    last = AccessEvent.objects.filter(site=token_obj.site, staff=staff).order_by("-occurred_at").first()
+    if last and last.direction == direction:
+        return JsonResponse({"error": "No change needed (already that status)."}, status=409)
+
+    if last and (timezone.now() - last.occurred_at).total_seconds() < DOUBLE_SCAN_SECONDS:
+        return JsonResponse({"error": "Flood/spam protection: You are acting too soon. Please wait a moment before trying again."}, status=429)
+
+    ev = AccessEvent.objects.create(site=token_obj.site, staff=staff, direction=direction, on_site=False)
+    return JsonResponse({"ok": True, "direction": ev.direction, "at": ev.occurred_at.isoformat()})
+
+
+# ---------- Work From Home sign-in (simple PIN + confirmations) ----------
+@transaction.atomic
+def wfh_signin(request, token: str):
+    # Render the same keypad scan UI but wired to WFH resolve/confirm endpoints
+    token_obj = get_object_or_404(SiteToken, token=token, is_active=True, site__is_active=True)
+    site = token_obj.site
+    resolve_url = reverse('scan_resolve_pin_wfh', kwargs={'token': token})
+    confirm_url = reverse('scan_confirm_wfh', kwargs={'token': token})
+    normal_scan = reverse('scan_page', kwargs={'token': token})
+    wfh_url = reverse('wfh_signin', kwargs={'token': token})
+    return render(request, "access/scan.html", {"site": site, "token": token, "resolve_url": resolve_url, "confirm_url": confirm_url, "is_wfh": True, "normal_scan_url": normal_scan, "wfh_url": wfh_url})
 
 # ---------- Manager views ----------
 def _get_site_or_404_for_user(user, site_id: int) -> Site:
@@ -479,6 +576,14 @@ def manager_dashboard(request):
     ).filter(last_event_direction=AccessEvent.IN)
     who_is_in = staff_with_latest
 
+    # Staff currently WFH (latest remote event is IN)
+    latest_wfh_dir = AccessEvent.objects.filter(site=site, staff_id=OuterRef('pk'), on_site=False).order_by('-occurred_at').values('direction')[:1]
+    latest_wfh_at = AccessEvent.objects.filter(site=site, staff_id=OuterRef('pk'), on_site=False).order_by('-occurred_at').values('occurred_at')[:1]
+    staff_wfh = StaffMember.objects.filter(site=site, is_active=True).annotate(
+        last_wfh_direction=Subquery(latest_wfh_dir),
+        last_wfh_at=Subquery(latest_wfh_at),
+    ).filter(last_wfh_direction=AccessEvent.IN).order_by('name')
+
     context = {
         "site": site,
         "sites": Site.objects.filter(id__in=site_ids_for_user(request.user)).order_by("name"),
@@ -492,6 +597,7 @@ def manager_dashboard(request):
         "contractors_in": contractors_in,
         "staff_in_today": staff_in_today,
         "who_is_in": who_is_in,
+        "staff_wfh": staff_wfh,
     }
     return render(request, "manager/dashboard.html", context)
 
@@ -686,10 +792,16 @@ def manager_qr(request, site_id: int):
             url = request.build_absolute_uri(reverse("portal_fire", kwargs={"token": t.token}))
         else:
             url = None
+        # Provide an optional WFH URL for tokens that support staff-style sign-in
+        wfh_url = None
+        if t.type in ("staff", "keypad"):
+            wfh_url = request.build_absolute_uri(reverse("wfh_signin", kwargs={"token": t.token}))
+
         portal_links.append({
             "type": t.get_type_display(),
             "token": t.token,
             "url": url,
+            "wfh_url": wfh_url,
             "raw_type": t.type,
         })
     from core.perms import site_ids_for_user
