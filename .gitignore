@@ -33,6 +33,10 @@ db.sqlite3
 staticfiles/
 media/
 
+# Local data files (do not commit)
+data.json
+users.json
+
 # IDEs
 .idea/
 .vscode/
